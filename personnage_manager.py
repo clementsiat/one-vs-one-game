@@ -15,7 +15,7 @@ class PersonnageManager():
         self._personnage_list = []
 
     def add_personnage(self):
-        P = Personnage(name=name_list[self.increment], max_health=randint(100, 200), max_energy=randint(100, 200), damage=randint(10, 20), defense=randint(1, 3), dodge=randint(0, 30), doubleAttaque=randint(0, 20), player_pos = pygame.Vector2(0, 0))
+        P = Personnage(name=name_list[self.increment], max_health=randint(100, 200), max_energy=randint(100, 200), damage=randint(10, 20), defense=randint(1, 10), dodge=randint(0, 50), doubleAttaque=randint(0, 20), player_pos = pygame.Vector2(0, 0))
         self._personnage_list.append(P)
         self.increment += 1
         return P

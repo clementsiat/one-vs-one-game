@@ -74,14 +74,17 @@ while running:
     # GESTION DES ACTIONS #
     #######################
     main_player.handle_actions(keys, dt)
-    enemy.bot_move(dt)
+    main_player.check_action_duration(dt)
+    enemy.check_action_duration(dt)
+    enemy.bot_move(dt, WIDTH, HEIGHT)
 
 
     ##########################
     # DESSIN DES PERSONNAGES #
     ##########################
     pygame.draw.circle(screen, main_player.get_color(), main_player.get_player_pos(), main_player.get_taille())
-    pygame.draw.circle(screen, enemy.get_color(), enemy.get_player_pos(), enemy.get_taille())
+    if not enemy.is_dead():
+        pygame.draw.circle(screen, enemy.get_color(), enemy.get_player_pos(), enemy.get_taille())
 
 
 

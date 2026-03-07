@@ -7,8 +7,9 @@ from enum import Enum
 
 class Action(Enum):
     IDLE = {"action": "idle", "duration": 0, "couleur": "black"}
-    ATTAQUE = {"action": "attack", "duration": 4, "couleur": "red"}
+    ATTAQUE = {"action": "attack", "duration": 1, "couleur": "red"}
     DEFENSE = {"action": "defense", "duration": 6, "couleur": "blue"}
+    INVULNERABLE = {"action": "invulnerable", "duration": 0.5, "couleur": "white"}
 
 
 class Personnage:
@@ -83,9 +84,11 @@ class Personnage:
     #####  METHODES DE INTERACTIONS  #####
     ######################################
 
-    def bot_move(self, dt):    
+    def bot_move(self, dt, world_width, world_height):    
+        if self.is_dead():
+            return
         self._ai_move_timer += dt
-
+        
         if self._ai_move_timer >= self._ai_move_duration:
             self._ai_move_timer = 0
             AI_choice = randint(1, 4)
@@ -100,6 +103,8 @@ class Personnage:
                 self._ai_direction = pygame.Vector2(0, 1)
 
         self._player_pos += self._ai_direction * 100 * dt
+        self._player_pos.x = max(self.get_taille(), min(self._player_pos.x, world_width - self.get_taille()))
+        self._player_pos.y = max(self.get_taille(), min(self._player_pos.y, world_height - self.get_taille()))
             
     def auto_defense(self,dt):
         if self._current_action != Action.IDLE:
@@ -212,7 +217,6 @@ class Personnage:
             self.launch_action(Action.ATTAQUE)
         if self._current_action == Action.IDLE and keys[pygame.K_e]:
             self.launch_action(Action.DEFENSE)
-        self.check_action_duration(dt)
 
     def check_action_duration(self, dt):
         if self._current_action != Action.IDLE:
@@ -276,7 +280,8 @@ class Personnage:
         Returns:
             None
         """
-        # TODO: Implement the attack method
+        if self.is_dead() or to_target.is_dead():
+            return
         to_target.get_hit(self._damage)
         chanceDeDoubleAttaque = randint(0, 100)
         if chanceDeDoubleAttaque < self._doubleAttaque:
@@ -314,18 +319,25 @@ class Personnage:
         Returns:
             int: Dégâts du personnage
         """
+        if self._current_action == Action.INVULNERABLE:
+            return
         chanceDeDodge = randint(0, 100)
-        if self._defense >= damage:
+        current_defense = self._defense if self._current_action == Action.DEFENSE else 0
+        if current_defense >= damage:
             return
         elif chanceDeDodge < self._dodge:
             self._compteurDodge += 1
-            print(f"{self.get_name()} a esquivé une attaque.")
+            print(f"{self.get_name()} a esquivé une attaque.{self._dodge}/100 il a roll {chanceDeDodge}")
+            self.launch_action(Action.INVULNERABLE)
             return
         else:
-            damage -= self._defense
+            damage -= current_defense
+            print(f"{self.get_name()} a pris {damage} dégats. {self._dodge}/100 il a roll {chanceDeDodge}")
+            self.launch_action(Action.INVULNERABLE)
         self._health -= damage
         if self.is_dead():
             print(f"{self.get_name()} est mort!!!  :(  ")
+            print(self)
 
 
 
