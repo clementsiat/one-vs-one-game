@@ -1,20 +1,39 @@
-# Example file showing a circle moving on screen
 import pygame
+import random
 from Personnage import Personnage
 from personnage_manager import PersonnageManager
 
-
-
-
 WIDTH = 1280
-HEIGHT = 720   
+HEIGHT = 720
 
-
-
-# pygame setup
+# ---------- INITIALISATION PYGAME ----------
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+
+# ---------- TAILLES ALÉATOIRES DES PERSONNAGES ----------
+taille_player = random.randint(50, 200)
+taille_enemy = random.randint(50, 200)
+taille_enemy1 = random.randint(50, 200)
+
+# ---------- CHARGEMENT DES IMAGES ----------
+player_img = pygame.image.load("personnnage1.png").convert_alpha()
+player_img = pygame.transform.scale(player_img, (taille_player, taille_player))
+
+enemy_img = pygame.image.load("personnnage1.png").convert_alpha()
+enemy_img = pygame.transform.scale(enemy_img, (taille_enemy, taille_enemy))
+
+enemy1_img = pygame.image.load("personnnage1.png").convert_alpha()
+enemy1_img = pygame.transform.scale(enemy1_img, (taille_enemy1, taille_enemy1))
+
+background = pygame.image.load("background_one_vs_one.png").convert()
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+# ---------- RAYONS DES CERCLES ----------
+rayon_player = int(taille_player * 0.3)
+rayon_enemy = int(taille_enemy * 0.3)
+rayon_enemy1 = int(taille_enemy1 * 0.3)
+
 running = True
 dt = 0
 
@@ -32,7 +51,7 @@ enemy1.set_player_pos(pygame.Vector2(800, 360))
 # character = Personnage(XXXXX, pos_x, pos_y)
 while running:
     # fill the screen with a color to wipe away anything from last frame
-    screen.fill("yellow")
+    screen.blit(background, (0, 0))
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
@@ -116,11 +135,20 @@ while running:
     # DESSIN DES PERSONNAGES #
     ##########################
     if not main_player.is_dead():
-        pygame.draw.circle(screen, main_player.get_color(), main_player.get_player_pos(), main_player.get_taille())
+        pos = main_player.get_player_pos()
+        pygame.draw.circle(screen, main_player.get_color(), pos, rayon_player, width=3)
+        rect = player_img.get_rect(center=(pos.x, pos.y))
+        screen.blit(player_img, rect)
     if not enemy.is_dead():
-        pygame.draw.circle(screen, enemy.get_color(), enemy.get_player_pos(), enemy.get_taille())
+        pos = enemy.get_player_pos()
+        pygame.draw.circle(screen, enemy.get_color(), pos, rayon_enemy, width=3)
+        rect = enemy_img.get_rect(center=(pos.x, pos.y))
+        screen.blit(enemy_img, rect)
     if not enemy1.is_dead():
-        pygame.draw.circle(screen, enemy1.get_color(), enemy1.get_player_pos(), enemy1.get_taille())
+        pos = enemy1.get_player_pos()
+        pygame.draw.circle(screen, enemy1.get_color(), pos, rayon_enemy1, width=3)
+        rect = enemy1_img.get_rect(center=(pos.x, pos.y))
+        screen.blit(enemy1_img, rect)
 
 
     # flip() the display to put your work on screen

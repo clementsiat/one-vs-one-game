@@ -96,7 +96,7 @@ class Personnage:
         if self._current_action == Action.INVULNERABLE:
 
             p = self._damaged_by
-            fuite_direction = self._player_pos - p.get_player_pos()
+            fuite_direction = self._player_pos - self._damaged_by.get_player_pos()
             if fuite_direction.length() > 0:
                 fuite_direction = fuite_direction.normalize()
                 self._ai_escape_direction = fuite_direction
