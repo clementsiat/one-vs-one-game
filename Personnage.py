@@ -7,16 +7,15 @@ from enum import Enum
 
 class Action(Enum):
     IDLE = {"action": "idle", "duration": 0, "couleur": "black"}
-    ATTAQUE = {"action": "attack", "duration": 1, "couleur": "red"}
+    ATTAQUE = {"action": "attack", "duration": 4, "couleur": "red"}
     DEFENSE = {"action": "defense", "duration": 6, "couleur": "blue"}
     INVULNERABLE = {"action": "invulnerable", "duration": 0.5, "couleur": "white"}
-
 
 class Personnage:
 
 
 
-    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(10, 20), attackRange = 200):
+    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(10, 20), attackRange = 200, weapon = None):
         """
         __init__ : Fonction d'initialisation d'un personnage
         -----
@@ -31,58 +30,50 @@ class Personnage:
             None
         """
         self._name: str = name
-
+        self._attack_timer = 0
+        self._next_attack_time = randint(10, 15)
         self._defense_timer = 0
         self._next_defense_time = randint(10, 20)
         self._ai_move_timer = 0
         self._ai_move_duration = 1.0
         self._ai_direction = pygame.Vector2(0, 0)
-
         self._attackRange = attackRange
-
         self._current_action: Action = Action.IDLE
         self._current_action_duration: float = 0.0
-
         self._attack_direction = pygame.Vector2(0, 0)
-
         self._taille: int = taille
         self._player_pos = player_pos
-
-
         self._max_health = max_health
         self._health = max_health # variable qui va changer
-
-
-
-
         self._max_energy = max_energy # capacité maximale ( qui change pas ou avec un potion )
         self._energy = max_energy # variable qui va changer
-
-
-
-
+        self._weapon  = weapon
         self._damage = damage
-
-
-
-
         self._defense = defense
-       
         self._dodge = dodge
         self._doubleAttaque = doubleAttaque
-
-
-
-
         self._compteurDoubleAttaque = 0
         self._compteurDodge = 0
         self._compteurKill = 0
+        self._target = None
+        self._ai_escape_direction = pygame.Vector2(0, 0)
+        self._damaged_by = None
 
 
 
     ######################################
     #####  METHODES DE INTERACTIONS  #####
     ######################################
+
+    def check_attack_collision(self, personnage_list : list['Personnage'], end_pos):
+        for p in personnage_list:
+            if p != self and not p.is_dead():
+                if self.is_colliding(end_pos, p):
+                    self.attack(p)
+                    self._target = p
+
+                    
+                                
 
     def bot_move(self, dt, world_width, world_height):    
         if self.is_dead():
@@ -102,9 +93,35 @@ class Personnage:
             else:
                 self._ai_direction = pygame.Vector2(0, 1)
 
-        self._player_pos += self._ai_direction * 100 * dt
+        if self._current_action == Action.INVULNERABLE:
+
+            p = self._damaged_by
+            fuite_direction = self._player_pos - p.get_player_pos()
+            if fuite_direction.length() > 0:
+                fuite_direction = fuite_direction.normalize()
+                self._ai_escape_direction = fuite_direction
+            self._player_pos += self._ai_escape_direction * 500 * dt
+        else:
+            self._player_pos += self._ai_direction * 100 * dt
         self._player_pos.x = max(self.get_taille(), min(self._player_pos.x, world_width - self.get_taille()))
         self._player_pos.y = max(self.get_taille(), min(self._player_pos.y, world_height - self.get_taille()))
+
+    def auto_attaque(self, player_list : list['Personnage'], dt):
+        if self._current_action != Action.IDLE:
+            return
+        self._attack_timer += dt
+        if self._attack_timer >= self._next_attack_time:
+            new_target_list = [x for x in player_list if x != self and not x.is_dead()]
+            self._target = choice(new_target_list)
+            direction = self._target.get_player_pos() - self._player_pos
+            if direction.length() == 0:
+                return
+            direction = direction.normalize()
+            self.set_attack_direction(direction)
+            self.launch_action(Action.ATTAQUE)
+            self._attack_timer = 0
+            self._next_attack_time = randint(10, 15)
+
             
     def auto_defense(self,dt):
         if self._current_action != Action.IDLE:
@@ -117,7 +134,7 @@ class Personnage:
             self._defense_timer = 0.0
             self._next_defense_time = randint(10, 20)
 
-    def get_attack_end_pos(self, direction):
+    def get_attack_end_pos(self, direction = None):
         """
         get_attack_end_pos:
             Calcul la position finale de la range d'attaque
@@ -128,6 +145,8 @@ class Personnage:
         Return:
             Vector2 : position finale de la range d'attaque
         """
+
+        direction = direction or self._target.get_player_pos() - self.get_player_pos()
         player_x = self._player_pos.x
         player_y = self._player_pos.y
 
@@ -234,7 +253,7 @@ class Personnage:
         :param dt: Description
         """
         self._current_action = action
-        self._current_action_duration = 0.0    
+        self._current_action_duration = 0.0  
 
         
 
@@ -266,9 +285,7 @@ class Personnage:
         # valid_targets = [p for p in other_personnages if p != self and not p.is_dead()]
         target = choice(valid_targets)
         return target
-
-
-
+        
 
     def attack(self, to_target: "Personnage"):
         """
@@ -280,12 +297,12 @@ class Personnage:
         Returns:
             None
         """
-        if self.is_dead() or to_target.is_dead():
+        if self.is_dead() or to_target.is_dead() or to_target.get_current_action() == Action.INVULNERABLE:
             return
-        to_target.get_hit(self._damage)
+        to_target.get_hit(self._damage, source = self)
         chanceDeDoubleAttaque = randint(0, 100)
         if chanceDeDoubleAttaque < self._doubleAttaque:
-            to_target.get_hit(self._damage)
+            to_target.get_hit(self._damage, bypass = True, source = self)
             self._compteurDoubleAttaque += 1
             print(f"{self.get_name()} a effectué une double attaque")
         if to_target.is_dead():
@@ -298,7 +315,7 @@ class Personnage:
         if self._attack_direction.dot(direction_to_target) < 0.5:
             return 
 
-        to_target.get_hit(self._damage)
+        to_target.get_hit(self._damage, source=self)
 
     def handle_attack_direction(self, mouse_pos):
         mouse_vector = mouse_pos - self._player_pos
@@ -309,7 +326,7 @@ class Personnage:
 
 
  
-    def get_hit(self, damage):
+    def get_hit(self, damage, bypass = False, source = None):
         """
         get_damage : Fonction qui retourne les dégâts du personnage
         -----
@@ -319,8 +336,9 @@ class Personnage:
         Returns:
             int: Dégâts du personnage
         """
-        if self._current_action == Action.INVULNERABLE:
+        if self._current_action == Action.INVULNERABLE and bypass == False:
             return
+        print(bypass)
         chanceDeDodge = randint(0, 100)
         current_defense = self._defense if self._current_action == Action.DEFENSE else 0
         if current_defense >= damage:
@@ -332,12 +350,16 @@ class Personnage:
             return
         else:
             damage -= current_defense
+            self._damaged_by = source
+            print("GETHIT")
+            print(self._damaged_by)
             print(f"{self.get_name()} a pris {damage} dégats. {self._dodge}/100 il a roll {chanceDeDodge}")
             self.launch_action(Action.INVULNERABLE)
         self._health -= damage
         if self.is_dead():
             print(f"{self.get_name()} est mort!!!  :(  ")
             print(self)
+
 
 
 
@@ -594,6 +616,18 @@ class Personnage:
     ###########################
     #####     GETTERS     #####
     ###########################
+
+    def get_current_action(self):
+        """
+        get_current_action : Fonction qui retourne l'Action en cour du personnage
+        -----
+        Args:
+            None
+        -----
+        Returns:
+            
+        """
+        return self._current_action
 
     def get_attackRange(self):
         """

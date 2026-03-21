@@ -81,3 +81,25 @@ name_list = [
     "Ka-na",
     "Lai-'il",
 ]
+weapon_name_list = [
+    "Spartan's Valor",
+    "Grim Reaper",
+    "Blast Blazer",
+    "Trigger Toppler",
+    "Tempest",
+    "Muzzle Meltdown",
+    "Tsunami",
+    "Godspeed",
+    "Revenant's Wrath",
+    "Phoenix ",
+    "Ghostly Whisper",
+    "Gunpowder Goliath",
+    "Shadowblast",
+    "Viper Strike",
+    "Bullet Fury ",
+    "Eclipse",
+    "Havocmaker",
+    "Samurai's Blade",
+    "Blast Burner",
+    "Cartridge Carnage "
+]
