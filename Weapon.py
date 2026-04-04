@@ -51,3 +51,56 @@ class Weapon:
     def get_weapon_type(self):
         return self._weapon_type
     
+
+class Sword(Weapon):
+
+    def __init__(self, name, damage, attack_range, attack_speed, durability, weapon_pos):
+        super().__init__(name, damage, attack_range, attack_speed, durability, "sword", weapon_pos)
+
+    def is_colliding(self, start_pos, direction, personnages, owner):
+        touched = []
+
+        if direction.length() == 0:
+            return touched
+
+        direction = direction.normalize()
+        end_pos = self.get_end_pos(start_pos, direction)
+
+        for p in personnages:
+            if p == owner or p.is_dead():
+                continue
+
+            distance = (p.get_player_pos() - end_pos).length()
+
+            # zone large (épée)
+            if distance < p.get_taille() + 25:
+                touched.append(p)
+
+        return touched
+
+
+class Spear(Weapon):
+
+    def __init__(self, name, damage, attack_range, attack_speed, durability, weapon_pos):
+        super().__init__(name, damage, attack_range, attack_speed, durability, "spear", weapon_pos)
+
+    def is_colliding(self, start_pos, direction, personnages, owner):
+        touched = []
+
+        if direction.length() == 0:
+            return touched
+
+        direction = direction.normalize()
+        end_pos = self.get_end_pos(start_pos, direction)
+
+        for p in personnages:
+            if p == owner or p.is_dead():
+                continue
+
+            distance = (p.get_player_pos() - end_pos).length()
+
+            # zone précise (lance)
+            if distance < p.get_taille():
+                touched.append(p)
+
+        return touched

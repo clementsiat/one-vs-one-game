@@ -1,7 +1,8 @@
-from random import randint
+from random import randint, choice
 from Personnage import Personnage
 from config import name_list
 import pygame
+from Weapon import Sword
 
 class PersonnageManager():
     _instance = None
@@ -15,7 +16,7 @@ class PersonnageManager():
         self._personnage_list = []
 
     def add_personnage(self):
-        P = Personnage(name=name_list[self.increment], max_health=randint(50, 200), max_energy=randint(100, 200), damage=randint(10, 20), defense=randint(1, 10), dodge=randint(0, 50), doubleAttaque=randint(0, 20), player_pos = pygame.Vector2(0, 0))
+        P = Personnage(name=choice(name_list), max_health=randint(50, 500), max_energy=randint(100, 200), damage=randint(5, 10), defense=randint(1, 10), dodge=randint(0, 50), doubleAttaque=randint(0, 20), player_pos = pygame.Vector2(0, 0),  weapon = Sword("Sword", 10, 120, 1, 100, None))
         self._personnage_list.append(P)
         self.increment += 1
         return P

@@ -2,20 +2,20 @@ from random import choice, randint
 from time import sleep
 import pygame, math
 from enum import Enum
-
+from Weapon import Sword, Spear
 
 
 class Action(Enum):
     IDLE = {"action": "idle", "duration": 0, "couleur": "black"}
     ATTAQUE = {"action": "attack", "duration": 4, "couleur": "red"}
     DEFENSE = {"action": "defense", "duration": 6, "couleur": "blue"}
-    INVULNERABLE = {"action": "invulnerable", "duration": 0.5, "couleur": "white"}
+    INVULNERABLE = {"action": "invulnerable", "duration": 0.7, "couleur": "white"}
 
 class Personnage:
 
 
 
-    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(10, 20), attackRange = 200, weapon = None):
+    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(20, 30), attackRange = 200, weapon = None):
         """
         __init__ : Fonction d'initialisation d'un personnage
         -----
@@ -75,12 +75,16 @@ class Personnage:
                     
                                 
 
-    def bot_move(self, dt, world_width, world_height):    
+    def bot_move(self, dt, world_width, world_height):
+        # Si on est mort - on fait rien    
         if self.is_dead():
             return
+        # timer pour le changement de direction
         self._ai_move_timer += dt
         
+        # Si le timer atteint son "timeout" on change de direction
         if self._ai_move_timer >= self._ai_move_duration:
+            # On reset
             self._ai_move_timer = 0
             AI_choice = randint(1, 4)
 
@@ -94,15 +98,17 @@ class Personnage:
                 self._ai_direction = pygame.Vector2(0, 1)
 
         if self._current_action == Action.INVULNERABLE:
-
             p = self._damaged_by
-            fuite_direction = self._player_pos - self._damaged_by.get_player_pos()
-            if fuite_direction.length() > 0:
-                fuite_direction = fuite_direction.normalize()
-                self._ai_escape_direction = fuite_direction
-            self._player_pos += self._ai_escape_direction * 500 * dt
+            if p is not None:
+                fuite_direction = self._player_pos - p.get_player_pos()
+                if len(fuite_direction) > 0:
+                    fuite_direction = fuite_direction.normalize()
+                    self._ai_escape_direction = fuite_direction
+                self._player_pos += self._ai_escape_direction * 500 * dt
         else:
             self._player_pos += self._ai_direction * 100 * dt
+
+
         self._player_pos.x = max(self.get_taille(), min(self._player_pos.x, world_width - self.get_taille()))
         self._player_pos.y = max(self.get_taille(), min(self._player_pos.y, world_height - self.get_taille()))
 
@@ -112,6 +118,8 @@ class Personnage:
         self._attack_timer += dt
         if self._attack_timer >= self._next_attack_time:
             new_target_list = [x for x in player_list if x != self and not x.is_dead()]
+            if len(new_target_list) == 0:
+                return
             self._target = choice(new_target_list)
             direction = self._target.get_player_pos() - self._player_pos
             if direction.length() == 0:
@@ -178,7 +186,8 @@ class Personnage:
         en_x = enemy.get_player_pos().x
         en_y = enemy.get_player_pos().y
         distance_to_enemy = math.sqrt(abs(en_x - x)**2 + abs(en_y - y)**2)
-        return distance_to_enemy < enemy.get_taille()
+        res = distance_to_enemy < enemy.get_taille()
+        return res
 
     def is_idling(self):
         return self._current_action == Action.IDLE
@@ -263,10 +272,6 @@ class Personnage:
     #####  METHODES DE CLASSE  #####
     ################################
 
-
-
-
-
     def choose_target(self, other_personnages: list["Personnage"]) -> "Personnage":
         """
         choose_target : Fonction qui choisit le personnage cible parmi la liste des personnages
@@ -299,10 +304,14 @@ class Personnage:
         """
         if self.is_dead() or to_target.is_dead() or to_target.get_current_action() == Action.INVULNERABLE:
             return
-        to_target.get_hit(self._damage, source = self)
+        total_damage = self._damage
+
+        if self._weapon:
+            total_damage += self._weapon.get_damage()
+        to_target.get_hit(total_damage,  source = self)
         chanceDeDoubleAttaque = randint(0, 100)
         if chanceDeDoubleAttaque < self._doubleAttaque:
-            to_target.get_hit(self._damage, bypass = True, source = self)
+            to_target.get_hit(total_damage, bypass = True, source = self)
             self._compteurDoubleAttaque += 1
             print(f"{self.get_name()} a effectué une double attaque")
         if to_target.is_dead():
@@ -314,8 +323,6 @@ class Personnage:
         direction_to_target = direction_to_target.normalize()
         if self._attack_direction.dot(direction_to_target) < 0.5:
             return 
-
-        to_target.get_hit(self._damage, source=self)
 
     def handle_attack_direction(self, mouse_pos):
         mouse_vector = mouse_pos - self._player_pos
@@ -338,9 +345,9 @@ class Personnage:
         """
         if self._current_action == Action.INVULNERABLE and bypass == False:
             return
-        print(bypass)
         chanceDeDodge = randint(0, 100)
         current_defense = self._defense if self._current_action == Action.DEFENSE else 0
+        self._damaged_by = source
         if current_defense >= damage:
             return
         elif chanceDeDodge < self._dodge:
@@ -350,18 +357,11 @@ class Personnage:
             return
         else:
             damage -= current_defense
-            self._damaged_by = source
-            print("GETHIT")
-            print(self._damaged_by)
             print(f"{self.get_name()} a pris {damage} dégats. {self._dodge}/100 il a roll {chanceDeDodge}")
             self.launch_action(Action.INVULNERABLE)
         self._health -= damage
         if self.is_dead():
             print(f"{self.get_name()} est mort!!!  :(  ")
-            print(self)
-
-
-
 
 
     def rest(self):

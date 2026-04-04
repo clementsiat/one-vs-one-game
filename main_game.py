@@ -2,6 +2,8 @@ import pygame
 import random
 from Personnage import Personnage
 from personnage_manager import PersonnageManager
+from Weapon import Sword, Spear
+
 
 WIDTH = 1280
 HEIGHT = 720
@@ -11,31 +13,10 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-# ---------- TAILLES ALÉATOIRES DES PERSONNAGES ----------
-taille_player = random.randint(50, 200)
-taille_enemy = random.randint(50, 200)
-taille_enemy1 = random.randint(50, 200)
-
-# ---------- CHARGEMENT DES IMAGES ----------
-player_img = pygame.image.load("personnnage1.png").convert_alpha()
-player_img = pygame.transform.scale(player_img, (taille_player, taille_player))
-
-enemy_img = pygame.image.load("personnnage1.png").convert_alpha()
-enemy_img = pygame.transform.scale(enemy_img, (taille_enemy, taille_enemy))
-
-enemy1_img = pygame.image.load("personnnage1.png").convert_alpha()
-enemy1_img = pygame.transform.scale(enemy1_img, (taille_enemy1, taille_enemy1))
-
-background = pygame.image.load("background_one_vs_one.png").convert()
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-
-# ---------- RAYONS DES CERCLES ----------
-rayon_player = int(taille_player * 0.3)
-rayon_enemy = int(taille_enemy * 0.3)
-rayon_enemy1 = int(taille_enemy1 * 0.3)
-
 running = True
 dt = 0
+
+# ---------- CREATION DES PERSONNAGES ----------
 
 pm  : 'PersonnageManager'= PersonnageManager.get_instance()
 main_player = pm.add_personnage()
@@ -46,6 +27,27 @@ main_player.set_player_pos(pygame.Vector2(200, 360))
 
 enemy.set_player_pos(pygame.Vector2(800, 360))
 enemy1.set_player_pos(pygame.Vector2(800, 360))
+
+# ---------- RAYONS DES CERCLES ----------
+rayon_player = int(main_player.get_taille() * 0.2)
+rayon_enemy = int(enemy.get_taille() * 0.2)
+rayon_enemy1 = int(enemy1.get_taille() * 0.2)
+
+
+# ---------- CHARGEMENT DES IMAGES ----------
+player_img = pygame.image.load("personnnage1.png").convert_alpha()
+player_img = pygame.transform.scale(player_img, (main_player.get_taille()*2, main_player.get_taille()*2))
+
+enemy_img = pygame.image.load("personnnage1.png").convert_alpha()
+enemy_img = pygame.transform.scale(enemy_img, (enemy.get_taille()*2, enemy.get_taille()*2))
+
+enemy1_img = pygame.image.load("personnnage1.png").convert_alpha()
+enemy1_img = pygame.transform.scale(enemy1_img, (enemy1.get_taille()*2, enemy1.get_taille()*2))
+
+background = pygame.image.load("background_one_vs_one.png").convert()
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+
 
 
 # character = Personnage(XXXXX, pos_x, pos_y)
