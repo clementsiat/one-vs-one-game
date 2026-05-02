@@ -2,7 +2,7 @@ from random import choice, randint
 from time import sleep
 import pygame, math
 from enum import Enum
-from Weapon import Sword, Spear
+from Weapon import Sword, Spear, Weapon
 
 
 class Action(Enum):
@@ -15,7 +15,7 @@ class Personnage:
 
 
 
-    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(20, 30), attackRange = 200, weapon = None):
+    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(20, 30), weapon = None):
         """
         __init__ : Fonction d'initialisation d'un personnage
         -----
@@ -37,7 +37,6 @@ class Personnage:
         self._ai_move_timer = 0
         self._ai_move_duration = 1.0
         self._ai_direction = pygame.Vector2(0, 0)
-        self._attackRange = attackRange
         self._current_action: Action = Action.IDLE
         self._current_action_duration: float = 0.0
         self._attack_direction = pygame.Vector2(0, 0)
@@ -47,7 +46,7 @@ class Personnage:
         self._health = max_health # variable qui va changer
         self._max_energy = max_energy # capacité maximale ( qui change pas ou avec un potion )
         self._energy = max_energy # variable qui va changer
-        self._weapon  = weapon
+        self._weapon : Weapon  = weapon
         self._damage = damage
         self._defense = defense
         self._dodge = dodge
@@ -58,12 +57,35 @@ class Personnage:
         self._target = None
         self._ai_escape_direction = pygame.Vector2(0, 0)
         self._damaged_by = None
+        self._flee_direction = None
 
 
 
     ######################################
     #####  METHODES DE INTERACTIONS  #####
     ######################################
+
+    def touch_wall(self, world_width, world_height):
+        """
+        touch_wall: regarde si le personnage touche le mur
+        ----
+        Args : self, world_width, world_height
+        ----
+        Return : 
+            list des murs touchée
+            list vide sinon
+        """
+        touched_walls = []
+        if self._player_pos.x - self.get_taille() == 0:
+            touched_walls.append("Gauche")
+        if self._player_pos.x + self.get_taille() == world_width:
+            touched_walls.append("Droite")
+        if self._player_pos.y - self.get_taille() == 0:
+            touched_walls.append("Haut")
+        if self._player_pos.y + self.get_taille() == world_height:
+            touched_walls.append("Bas")
+        return touched_walls
+
 
     def check_attack_collision(self, personnage_list : list['Personnage'], end_pos):
         for p in personnage_list:
@@ -98,14 +120,30 @@ class Personnage:
                 self._ai_direction = pygame.Vector2(0, 1)
 
         if self._current_action == Action.INVULNERABLE:
-            p = self._damaged_by
-            if p is not None:
-                fuite_direction = self._player_pos - p.get_player_pos()
-                if len(fuite_direction) > 0:
-                    fuite_direction = fuite_direction.normalize()
-                    self._ai_escape_direction = fuite_direction
+
+            if self._current_action == Action.INVULNERABLE:
+
+                if self._flee_direction is None and self._damaged_by:
+                    self._flee_direction = self._player_pos - self._damaged_by.get_player_pos()
+
+                    walls = self.touch_wall(world_width, world_height)
+
+                    if "Gauche" in walls:
+                        self._flee_direction.x = abs(self._flee_direction.x)
+                    if "Droite" in walls:
+                        self._flee_direction.x = -abs(self._flee_direction.x)
+                    if "Haut" in walls:
+                        self._flee_direction.y = abs(self._flee_direction.y)
+                    if "Bas" in walls:
+                        self._flee_direction.y = -abs(self._flee_direction.y)
+
+                    if self._flee_direction.length() > 0:
+                        self._ai_escape_direction = self._flee_direction.normalize()
+
                 self._player_pos += self._ai_escape_direction * 500 * dt
         else:
+            self._flee_direction = None
+            self._ai_escape_direction = pygame.Vector2(0, 0)
             self._player_pos += self._ai_direction * 100 * dt
 
 
@@ -166,8 +204,8 @@ class Personnage:
         vecteur_normalise_x = direction_x / vecteur_normalise
         vecteur_normalise_y = direction_y / vecteur_normalise
 
-        end_x = player_x + vecteur_normalise_x * self._attackRange
-        end_y = player_y + vecteur_normalise_y * self._attackRange
+        end_x = player_x + vecteur_normalise_x * self._weapon.get_attack_range()
+        end_y = player_y + vecteur_normalise_y * self._weapon.get_attack_range()
 
         return pygame.Vector2(end_x, end_y)
 
@@ -219,7 +257,6 @@ class Personnage:
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self._player_pos.x += 300 * dt
     
-        
         
         self._player_pos.x = max(self.get_taille(), min(self._player_pos.x, world_width - self.get_taille()))
         self._player_pos.y = max(self.get_taille(), min(self._player_pos.y, world_height - self.get_taille()))
@@ -362,6 +399,7 @@ class Personnage:
         self._health -= damage
         if self.is_dead():
             print(f"{self.get_name()} est mort!!!  :(  ")
+            print(self)
 
 
     def rest(self):
