@@ -14,8 +14,7 @@ class Action(Enum):
 class Personnage:
 
 
-
-    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille = randint(20, 30), weapon = None):
+    def __init__(self, name, max_health, max_energy, damage, defense, dodge, doubleAttaque, player_pos, taille, player_image, weapon = None):
         """
         __init__ : Fonction d'initialisation d'un personnage
         -----
@@ -58,6 +57,7 @@ class Personnage:
         self._ai_escape_direction = pygame.Vector2(0, 0)
         self._damaged_by = None
         self._flee_direction = None
+        self._player_image = player_image
 
 
 
@@ -655,6 +655,18 @@ class Personnage:
     #####     GETTERS     #####
     ###########################
 
+    def get_player_image(self):
+        """
+        get_player_image : Fonction qui retourne l'image du personnage
+        -----
+        Args:
+            None
+        -----
+        Returns:
+            
+        """
+        return self._player_image
+    
     def get_current_action(self):
         """
         get_current_action : Fonction qui retourne l'Action en cour du personnage

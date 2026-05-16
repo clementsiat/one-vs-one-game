@@ -1,20 +1,20 @@
 from random import randint
-from Weapon import Weapon
 from Personnage import Personnage
 from config import weapon_name_list
 import pygame
+from Weapon import Sword, Spear
 
 
-sword = Weapon(
+sword = Sword(
     name="Basic Sword",
     damage=10,
-    attack_range=2.0,
+    attack_range=7.0,
     attack_speed=1.2,
     durability=100,
     weapon_type="sword"
 )
 
-spear = Weapon(
+spear = Spear(
     name="Wooden Spear",
     damage=12,
     attack_range=3.5,
@@ -23,7 +23,7 @@ spear = Weapon(
     weapon_type="spear"
 )
 
-axe = Weapon(
+axe = Axe(
     name="Heavy Axe",
     damage=15,
     attack_range=1.8,
@@ -32,7 +32,7 @@ axe = Weapon(
     weapon_type="axe"
 )
 
-dagger = Weapon(
+dagger = Dagger(
     name="Small dagger",
     damage=3,
     attack_range=0.5,

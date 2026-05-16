@@ -35,35 +35,68 @@ rayon_enemy1 = int(enemy1.get_taille() * 0.2)
 
 
 # ---------- CHARGEMENT DES IMAGES ----------
-player_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
-player_img = pygame.transform.scale(player_img, (main_player.get_taille()*2, main_player.get_taille()*2))
-
-enemy_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
-enemy_img = pygame.transform.scale(enemy_img, (enemy.get_taille()*2, enemy.get_taille()*2))
-
-enemy1_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
-enemy1_img = pygame.transform.scale(enemy1_img, (enemy1.get_taille()*2, enemy1.get_taille()*2))
-
 background = pygame.image.load("Images/background_one_vs_one.png").convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
-sword_img = pygame.image.load("Images/Sword.png").convert()
+sword_img = pygame.image.load("Images/Sword.png").convert_alpha()
+sword_img = pygame.transform.scale(sword_img, (20, 70))
 #redimensionner l'épée
 #sword = pygame.transform.scale(sword, (WIDTH, HEIGHT))
 
-def affichage_épée(screen, sword_img, player : Personnage, mouse_pos):
-    dx = mouse_pos[0] - player.get_player_pos()[0]
-    dy = mouse_pos[1] - player.get_player_pos()[1]
+def affichage_player(player : Personnage):
+    if not player.is_dead():
+        pos = player.get_player_pos()
+        pygame.draw.circle(screen, player.get_color(), pos, rayon_player, width=3)
+        rect = player.get_player_image().get_rect(center=(pos.x, pos.y))
+        screen.blit(player.get_player_image(), rect)
+        pp = player.get_player_pos()
+        pt = player.get_taille()
+        pygame.draw.line(screen, (255, 0, 0), (pp.x - pt, pp.y - pt*1.25), (pp.x + pt, pp.y - pt*1.25), 5)
+        max_health = player.get_max_health()
+        current_health = player.get_health()
+        life_prg = current_health * ((pp.x + pt) - (pp.x - pt)) / max_health
+        pygame.draw.line(screen, (0, 255, 0), (pp.x - pt, pp.y - pt*1.25), (life_prg + (pp.x - pt), pp.y - pt*1.25), 5)
 
-    angle = math.degrees(math.atan2(-dy, dx)) - 90
 
-    distance  = player.get_taille()
-    x = player._player_pos[0] + math.cos(math.radians(angle)) * distance
-    y = player._player_pos[1] - math.sin(math.radians(angle)) * distance
+def affichage_épée(screen, sword_img, player, target_pos):
 
-    rotated = pygame.transform.rotate(sword_img, angle)
-    rect = rotated.get_rect(center = (x, y))
-    screen.blit(rotated, rect)
+    start_pos = player.get_player_pos()
+
+    # direction vers la cible
+    direction = target_pos - start_pos
+
+    if direction.length() == 0:
+        return
+
+    # longueur réelle de l'attaque
+    distance = direction.length()
+
+    # normalisation
+    direction = direction.normalize()
+
+    # angle
+    angle = math.degrees(math.atan2(-direction.y, direction.x)) - 90
+
+    # ---- REDIMENSIONNEMENT ----
+    sword_width = 40
+    sword_height = int(distance)
+
+    scaled_sword = pygame.transform.scale(
+        sword_img,
+        (sword_width, sword_height)
+    )
+
+    # rotation
+    rotated_sword = pygame.transform.rotate(scaled_sword, angle)
+
+    # milieu entre départ et arrivée
+    center_pos = start_pos + direction * (distance / 2)
+
+    rect = rotated_sword.get_rect(
+        center=(center_pos.x, center_pos.y)
+    )
+
+    screen.blit(rotated_sword, rect)
 
 # character = Personnage(XXXXX, pos_x, pos_y)
 while running:
@@ -154,21 +187,10 @@ while running:
     ##########################
     # DESSIN DES PERSONNAGES #
     ##########################
-    if not main_player.is_dead():
-        pos = main_player.get_player_pos()
-        pygame.draw.circle(screen, main_player.get_color(), pos, rayon_player, width=3)
-        rect = player_img.get_rect(center=(pos.x, pos.y))
-        screen.blit(player_img, rect)
-    if not enemy.is_dead():
-        pos = enemy.get_player_pos()
-        pygame.draw.circle(screen, enemy.get_color(), pos, rayon_enemy, width=3)
-        rect = enemy_img.get_rect(center=(pos.x, pos.y))
-        screen.blit(enemy_img, rect)
-    if not enemy1.is_dead():
-        pos = enemy1.get_player_pos()
-        pygame.draw.circle(screen, enemy1.get_color(), pos, rayon_enemy1, width=3)
-        rect = enemy1_img.get_rect(center=(pos.x, pos.y))
-        screen.blit(enemy1_img, rect)
+    for element in pm.get_personnage_list():
+        affichage_player(element)
+
+
 
 
     # flip() the display to put your work on screen

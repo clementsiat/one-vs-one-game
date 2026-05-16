@@ -17,6 +17,10 @@ class PersonnageManager():
         self._personnage_list = []
 
     def add_personnage(self):
+        player_taille = randint(20, 30)
+        player_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
+        player_img = pygame.transform.scale(player_img, (player_taille*2, player_taille*2))
+
         P = Personnage(
             name=choice(name_list), 
             max_health=randint(50, 500), 
@@ -24,9 +28,11 @@ class PersonnageManager():
             damage=randint(5, 10), 
             defense=randint(1, 10), 
             dodge=randint(0, 50), 
+            taille=player_taille,
             doubleAttaque=randint(0, 20), 
             player_pos = pygame.Vector2(0, 0),  
-            weapon = Spear("Spear", 10, 120, 1, 100, None)
+            weapon = Sword("Sword", 10, 120, 1, 100, None),
+            player_image = player_img
         )
         self._personnage_list.append(P)
         self.increment += 1
