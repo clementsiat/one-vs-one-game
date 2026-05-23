@@ -209,9 +209,9 @@ class Personnage:
 
         return pygame.Vector2(end_x, end_y)
 
-    def is_colliding(self, attack_end_pos, enemy : "Personnage"):
+    def is_colliding(self, direction, enemy_list : list["Personnage"]):
         """
-        Docstring for is_collinding
+        Docstring for is_colliding
         ----
         Args:
             self, attack_end_pos, enemy
@@ -219,14 +219,11 @@ class Personnage:
         Returns:
 
         """
-        x = attack_end_pos.x
-        y = attack_end_pos.y
-        en_x = enemy.get_player_pos().x
-        en_y = enemy.get_player_pos().y
-        distance_to_enemy = math.sqrt(abs(en_x - x)**2 + abs(en_y - y)**2)
-        res = distance_to_enemy < enemy.get_taille()
-        return res
-
+        weapon : Weapon = self._weapon
+        enemy_touched_list = weapon.is_colliding(self._player_pos, direction, enemy_list, self)
+        for enemy in enemy_touched_list:
+            self.attack(enemy)
+        
     def is_idling(self):
         return self._current_action == Action.IDLE
 
@@ -452,6 +449,18 @@ class Personnage:
     #####     SETTERS     #####
     ###########################
 
+    def set_weapon(self, weapon):
+        """
+        set_weapon : Donnes le weapon du joueur
+        -----
+        Args:
+        None
+        -----
+        Returns:
+            None
+        """
+        self._weapon : Weapon = weapon
+
     def set_attackRange(self, attackRange):
         """
         set_attackRange : Donnes la longueur d'attaque du joueur
@@ -654,6 +663,18 @@ class Personnage:
     ###########################
     #####     GETTERS     #####
     ###########################
+
+    def get_player_weapon(self):
+        """
+        get_player_weapon : Fonction qui retourne le weapon du personnage
+        -----
+        Args:
+            None
+        -----
+        Returns:
+            
+        """
+        return self._weapon
 
     def get_player_image(self):
         """

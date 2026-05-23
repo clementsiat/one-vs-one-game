@@ -1,7 +1,8 @@
-import math
+import math, random
+from config import weapon_name_list
 
 class Weapon:
-    def __init__(self, name, damage, attack_range, attack_speed, durability, weapon_type, weapon_pos):
+    def __init__(self, damage, attack_range, attack_speed, durability, weapon_type, image):
         """
         Weapon : classe représentant une arme
 
@@ -14,14 +15,18 @@ class Weapon:
             weapon_type (str) : type d'arme (ex: "sword", "spear", "axe")
         """
 
-        self._name = name
+        self._name = random.choice(weapon_name_list)
         self._damage = damage
         self._attack_range = attack_range
         self._attack_speed = attack_speed
         self._durability = durability
         self._weapon_type = weapon_type
-        self._weapon_pos = weapon_pos
+        self._image = image
         
+    def is_colliding(self, start_pos, direction, personnages, owner):
+        raise NotImplementedError("Your is_colliding method is not written")      
+
+     
 
 
    
@@ -53,23 +58,24 @@ class Weapon:
     def get_weapon_type(self):
         return self._weapon_type
     
+    def get_image(self):
+        return self._image
 
 class Sword(Weapon):
 
-    def __init__(self, name, damage, attack_range, attack_speed, durability, weapon_pos):
+    def __init__(self, damage, attack_range, attack_speed, durability, image):
         super().__init__(
-            name,
             damage,
             attack_range,
             attack_speed,
             durability,
             "sword",
-            weapon_pos
+            image
         )
-        print("A new sword has been forged")
+        
 
     def is_colliding(self, start_pos, direction, personnages, owner):
-        print("USING SWORD COLLISION")
+        
 
         touched = []
 
@@ -131,16 +137,16 @@ class Sword(Weapon):
                 touched.append(enemy)
 
         return touched
-    
+
 
 
 
 
 class Spear(Weapon):
 
-    def __init__(self, name, damage, attack_range, attack_speed, durability, weapon_pos):
-        super().__init__(name, damage, attack_range, attack_speed, durability, "spear", weapon_pos)
-        print("A new spear has been forged")
+    def __init__(self, damage, attack_range, attack_speed, durability, image):
+        super().__init__(damage, attack_range, attack_speed, durability, "spear", image)
+
 
     def is_colliding(self, start_pos, direction, personnages, owner):
         touched = []
@@ -160,5 +166,84 @@ class Spear(Weapon):
             # zone précise (lance)
             if distance < p.get_taille():
                 touched.append(p)
+
+        return touched
+    
+
+
+class Dagger(Weapon):
+
+    def __init__(self, damage, attack_range, attack_speed, durability, image):
+        super().__init__(
+            damage,
+            attack_range,
+            attack_speed,
+            durability,
+            "dagger",
+            image
+        )
+        
+
+    def is_colliding(self, start_pos, direction, personnages, owner):
+    
+
+        touched = []
+
+        # sécurité
+        if direction.length() == 0:
+            return touched
+
+        # normalisation
+        direction = direction.normalize()
+
+        # position finale de l'épée
+        end_pos = self.get_end_pos(start_pos, direction)
+
+        # coordonnées du segment
+        x1 = start_pos.x
+        y1 = start_pos.y
+
+        x2 = end_pos.x
+        y2 = end_pos.y
+
+        # vecteur du segment
+        dx = x2 - x1
+        dy = y2 - y1
+
+        # test sur tous les personnages
+        for enemy in personnages:
+
+            # ignore soi-même et morts
+            if enemy == owner or enemy.is_dead():
+                continue
+
+            # centre du cercle ennemi
+            cx = enemy.get_player_pos().x
+            cy = enemy.get_player_pos().y
+
+            # rayon du joueur
+            radius = enemy.get_taille()
+
+            # cas segment = point
+            if dx == 0 and dy == 0:
+                distance = math.hypot(cx - x1, cy - y1)
+
+            else:
+                # projection sur le segment
+                t = ((cx - x1) * dx + (cy - y1) * dy) / (dx * dx + dy * dy)
+
+                # clamp entre 0 et 1
+                t = max(0, min(1, t))
+
+                # point le plus proche
+                closest_x = x1 + t * dx
+                closest_y = y1 + t * dy
+
+                # distance finale
+                distance = math.hypot(cx - closest_x, cy - closest_y)
+
+            # collision
+            if distance <= radius:
+                touched.append(enemy)
 
         return touched

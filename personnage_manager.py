@@ -4,6 +4,7 @@ from config import name_list
 import pygame
 from Weapon import Sword
 from Weapon import Spear
+from Weapon import Dagger
 
 class PersonnageManager():
     _instance = None
@@ -16,7 +17,7 @@ class PersonnageManager():
         self.increment = 0
         self._personnage_list = []
 
-    def add_personnage(self):
+    def add_personnage(self, weapon):
         player_taille = randint(20, 30)
         player_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
         player_img = pygame.transform.scale(player_img, (player_taille*2, player_taille*2))
@@ -31,7 +32,7 @@ class PersonnageManager():
             taille=player_taille,
             doubleAttaque=randint(0, 20), 
             player_pos = pygame.Vector2(0, 0),  
-            weapon = Sword("Sword", 10, 120, 1, 100, None),
+            weapon = weapon,
             player_image = player_img
         )
         self._personnage_list.append(P)

@@ -2,7 +2,8 @@ import pygame
 import random
 from Personnage import Personnage
 from personnage_manager import PersonnageManager
-from Weapon import Sword, Spear
+from weapon_manager import WeaponManager
+from Weapon import Sword, Spear, Dagger
 import math
 
 WIDTH = 1280
@@ -16,15 +17,33 @@ clock = pygame.time.Clock()
 running = True
 dt = 0
 
-# ---------- CREATION DES PERSONNAGES ----------
+# ---------- CHARGEMENT DES IMAGES ----------
+background = pygame.image.load("Images/background_one_vs_one.png").convert()
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
+sword_img = pygame.image.load("Images/sword.png").convert_alpha()
+sword_img = pygame.transform.scale(sword_img, (33, 70))
+#redimensionner l'épée
+#sword = pygame.transform.scale(sword, (WIDTH, HEIGHT))
+dagger_img = pygame.image.load("Images/dagger.png").convert_alpha()
+dagger_img = pygame.transform.scale(dagger_img, (28, 50))
+
+# ---------- CREATION DES PERSONNAGES ----------
+weapon_image_list = {
+    "spear": None,
+    "dagger": dagger_img,
+    "sword": sword_img
+}
+
+wm : 'WeaponManager' = WeaponManager(weapon_image_list)
 pm  : 'PersonnageManager'= PersonnageManager.get_instance()
-main_player = pm.add_personnage()
-enemy : 'Personnage' = pm.add_personnage()
-enemy1 : 'Personnage' = pm.add_personnage()
+
+
+main_player = pm.add_personnage(wm.create_dagger())
+enemy : 'Personnage' = pm.add_personnage(wm.create_sword())
+enemy1 : 'Personnage' = pm.add_personnage(wm.create_dagger())
 
 main_player.set_player_pos(pygame.Vector2(200, 360))
-
 enemy.set_player_pos(pygame.Vector2(800, 360))
 enemy1.set_player_pos(pygame.Vector2(800, 360))
 
@@ -32,16 +51,6 @@ enemy1.set_player_pos(pygame.Vector2(800, 360))
 rayon_player = int(main_player.get_taille() * 0.2)
 rayon_enemy = int(enemy.get_taille() * 0.2)
 rayon_enemy1 = int(enemy1.get_taille() * 0.2)
-
-
-# ---------- CHARGEMENT DES IMAGES ----------
-background = pygame.image.load("Images/background_one_vs_one.png").convert()
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-
-sword_img = pygame.image.load("Images/Sword.png").convert_alpha()
-sword_img = pygame.transform.scale(sword_img, (20, 70))
-#redimensionner l'épée
-#sword = pygame.transform.scale(sword, (WIDTH, HEIGHT))
 
 def affichage_player(player : Personnage):
     if not player.is_dead():
@@ -57,8 +66,46 @@ def affichage_player(player : Personnage):
         life_prg = current_health * ((pp.x + pt) - (pp.x - pt)) / max_health
         pygame.draw.line(screen, (0, 255, 0), (pp.x - pt, pp.y - pt*1.25), (life_prg + (pp.x - pt), pp.y - pt*1.25), 5)
 
+def affichage_weapon(screen, player : "Personnage", target_pos):
+    start_pos = player.get_player_pos()
 
-def affichage_épée(screen, sword_img, player, target_pos):
+    # direction vers la cible
+    direction = target_pos - start_pos
+
+    if direction.length() == 0:
+        return
+
+    # longueur réelle de l'attaque
+    distance = direction.length()
+
+    # normalisation
+    direction = direction.normalize()
+
+    # angle
+    angle = math.degrees(math.atan2(-direction.y, direction.x)) - 90
+
+    # ---- REDIMENSIONNEMENT ----
+    weapon_width = 40
+    weapon_height = int(distance)
+
+    scaled_weapon = pygame.transform.scale(
+        player.get_player_weapon().get_image(),
+        (weapon_width, weapon_height)
+    )
+
+    # rotation
+    rotated_weapon = pygame.transform.rotate(scaled_weapon, angle)
+
+    # milieu entre départ et arrivée
+    center_pos = start_pos + direction * (distance / 2)
+
+    rect = rotated_weapon.get_rect(
+        center=(center_pos.x, center_pos.y)
+    )
+
+    screen.blit(rotated_weapon, rect)
+
+def affichage_dagger(screen, dagger_img, player, target_pos):
 
     start_pos = player.get_player_pos()
 
@@ -78,25 +125,25 @@ def affichage_épée(screen, sword_img, player, target_pos):
     angle = math.degrees(math.atan2(-direction.y, direction.x)) - 90
 
     # ---- REDIMENSIONNEMENT ----
-    sword_width = 40
-    sword_height = int(distance)
+    dagger_width = 28
+    dagger_height = 50
 
-    scaled_sword = pygame.transform.scale(
-        sword_img,
-        (sword_width, sword_height)
+    scaled_dagger = pygame.transform.scale(
+        dagger_img,
+        (dagger_width, dagger_height)
     )
 
     # rotation
-    rotated_sword = pygame.transform.rotate(scaled_sword, angle)
+    rotated_dagger = pygame.transform.rotate(scaled_dagger, angle)
 
     # milieu entre départ et arrivée
     center_pos = start_pos + direction * (distance / 2)
 
-    rect = rotated_sword.get_rect(
+    rect = rotated_dagger.get_rect(
         center=(center_pos.x, center_pos.y)
     )
 
-    screen.blit(rotated_sword, rect)
+    screen.blit(rotated_dagger, rect)
 
 # character = Personnage(XXXXX, pos_x, pos_y)
 while running:
@@ -134,19 +181,21 @@ while running:
     enemy.auto_attaque(pm.get_personnage_list(), dt)
     if enemy.is_attacking():
         end_pos = enemy.get_attack_end_pos()
+        direction = enemy.get_attack_direction()
         if not enemy.is_dead():
-            affichage_épée(screen, sword_img, enemy, end_pos)
+            affichage_weapon(screen, enemy, end_pos)
             #pygame.draw.line(screen, pygame.Color(255,0,0), enemy.get_player_pos(), end_pos, width=5)
-        enemy.check_attack_collision(pm.get_personnage_list(), end_pos)
+        enemy.is_colliding(direction, pm.get_personnage_list())
 
 
     enemy1.auto_attaque(pm.get_personnage_list(), dt)
     if enemy1.is_attacking():
         end_pos = enemy1.get_attack_end_pos()
+        direction = enemy1.get_attack_direction()
         if not enemy1.is_dead():
-            affichage_épée(screen, sword_img, enemy1, end_pos)
+            affichage_weapon(screen, enemy1, end_pos)
             #pygame.draw.line(screen, pygame.Color(255,0,0), enemy1.get_player_pos(), end_pos, width=5)
-        enemy1.check_attack_collision(pm.get_personnage_list(), end_pos)
+        enemy1.is_colliding(direction, pm.get_personnage_list())
 
 
     #####################
@@ -154,15 +203,10 @@ while running:
     #####################
     if main_player.is_attacking():
         direction  = mouse_pos - main_player.get_player_pos()
-        end_pos = main_player.get_attack_end_pos(direction)  
         if not main_player.is_dead():    
-            affichage_épée(screen, sword_img, main_player, end_pos)
-            #pygame.draw.line(screen, pygame.Color(255, 0, 0), main_player.get_player_pos(), end_pos, width = 5)
-        # Si l'attaque touche
-        if main_player.is_colliding(end_pos, enemy):
-            main_player.attack(enemy)
-        if main_player.is_colliding(end_pos, enemy1):
-            main_player.attack(enemy1)
+            affichage_weapon(screen, main_player, main_player.get_attack_end_pos(direction))
+        main_player.is_colliding(direction, pm.get_personnage_list())
+
     
     ##########################
     # GESTION DES MOUVEMENTS #
