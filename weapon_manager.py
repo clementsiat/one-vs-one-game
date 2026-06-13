@@ -3,10 +3,11 @@ from Personnage import Personnage
 from config import weapon_name_list
 import pygame
 from Weapon import Sword, Spear, Dagger, Axe
+from image_manager import im
 
 class WeaponManager:
     
-    def __init__(self, image_list):
+    def __init__(self):
         """
         init : constructeur de weapon manager
 
@@ -15,8 +16,10 @@ class WeaponManager:
                 {"sword": image_sword}
         """
         self.increment = 0
-        self._image_list = image_list 
         self._weapon_list = []
+
+    def init_images(self):
+        self._image_list = im.get_weapon_image()
 
 
     def create_sword(self):
@@ -58,3 +61,4 @@ class WeaponManager:
             durability=200,
             image=self._image_list.get("axe")
         )
+wm = WeaponManager()

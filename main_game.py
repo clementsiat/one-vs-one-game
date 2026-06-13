@@ -2,12 +2,12 @@ import pygame
 import random
 from Personnage import Personnage
 from personnage_manager import PersonnageManager
-from weapon_manager import WeaponManager
+from weapon_manager import wm
 from Weapon import Sword, Spear, Dagger, Axe
 import math
+from config import WIDTH, HEIGHT
+from image_manager import im
 
-WIDTH = 1280
-HEIGHT = 720
 
 # ---------- INITIALISATION PYGAME ----------
 pygame.init()
@@ -16,54 +16,23 @@ clock = pygame.time.Clock()
 
 running = True
 dt = 0
-
-# ---------- CHARGEMENT DES IMAGES ----------
-starting_screen = pygame.image.load("Images/starting_screen.png").convert()
-starting_screen = pygame.transform.scale(starting_screen, (WIDTH, HEIGHT))
-
-background = pygame.image.load("Images/background_one_vs_one.png").convert()
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
-
-sword_img = pygame.image.load("Images/sword.png").convert_alpha()
-sword_img = pygame.transform.scale(sword_img, (33, 70))
-dagger_img = pygame.image.load("Images/dagger.png").convert_alpha()
-dagger_img = pygame.transform.scale(dagger_img, (28, 50))
-spear_img = pygame.image.load("Images/spear.png").convert_alpha()
-spear_img = pygame.transform.scale(spear_img, (12, 130))
-axe_img = pygame.image.load("Images/axe.png").convert_alpha()
-axe_img = pygame.transform.scale(axe_img, (37, 100))
-sword_rect = sword_img.get_rect(center=(150, 150))
-dagger_rect = dagger_img.get_rect(center=(WIDTH - 150, 150))
-spear_rect = spear_img.get_rect(center=(150, HEIGHT - 150))
-axe_rect = axe_img.get_rect(center=(WIDTH - 150, HEIGHT - 150))
-# ---------- CREATION DES PERSONNAGES ----------
-weapon_image_list = {
-    "spear": spear_img,
-    "dagger": dagger_img,
-    "sword": sword_img,
-    "axe": axe_img
-}
-
-wm : 'WeaponManager' = WeaponManager(weapon_image_list)
+# Chargement des images
+im.load_images()
+# Les images sont ensuite chargées pour les armes
+wm.init_images()
+# On récupère les elements 
+env_images = im.get_environnement()
+weapon_images = im.get_weapon_image()
+rect_images = im.get_rect()
 pm  : 'PersonnageManager'= PersonnageManager.get_instance()
 
 game_started = False
 selected_weapon = None
-main_player = pm.add_personnage(wm.create_axe())
-main_player.set_player_pos(pygame.Vector2(200, 360))
-
-
-
-
-
-# ---------- RAYONS DES CERCLES ----------
-rayon_player = int(main_player.get_taille() * 0.2)
-
 
 def affichage_player(player : Personnage):
     if not player.is_dead():
         pos = player.get_player_pos()
-        pygame.draw.circle(screen, player.get_color(), pos, rayon_player, width=3)
+        pygame.draw.circle(screen, player.get_color(), pos, player.get_taille(), width=3)
         rect = player.get_player_image().get_rect(center=(pos.x, pos.y))
         screen.blit(player.get_player_image(), rect)
         pp = player.get_player_pos()
@@ -93,7 +62,7 @@ def affichage_weapon(screen, player : "Personnage", target_pos):
     angle = math.degrees(math.atan2(-direction.y, direction.x)) - 90
 
     # ---- REDIMENSIONNEMENT ----
-    weapon_width = 40
+    weapon_width = player.get_player_weapon().get_image().get_width() 
     weapon_height = int(distance)
 
     scaled_weapon = pygame.transform.scale(
@@ -118,12 +87,12 @@ def affichage_weapon(screen, player : "Personnage", target_pos):
 while running:
     if not game_started:
 
-        screen.blit(starting_screen, (0, 0))
+        screen.blit(env_images.get('starting_screen'), (0, 0))
 
-        screen.blit(sword_img, sword_rect)
-        screen.blit(dagger_img, dagger_rect)
-        screen.blit(spear_img, spear_rect)
-        screen.blit(axe_img, axe_rect)
+        screen.blit(weapon_images.get('sword'), rect_images.get('sword_rect'))
+        screen.blit(weapon_images.get('dagger'), rect_images.get('dagger_rect'))
+        screen.blit(weapon_images.get('spear'), rect_images.get('spear_rect'))
+        screen.blit(weapon_images.get('axe'), rect_images.get('axe_rect'))
 
         for event in pygame.event.get():
 
@@ -132,16 +101,16 @@ while running:
 
             if event.type == pygame.MOUSEBUTTONDOWN:
 
-                if sword_rect.collidepoint(event.pos):
+                if rect_images.get('sword_rect').collidepoint(event.pos):
                     selected_weapon = wm.create_sword()
 
-                elif dagger_rect.collidepoint(event.pos):
+                elif rect_images.get('dagger_rect').collidepoint(event.pos):
                     selected_weapon = wm.create_dagger()
 
-                elif spear_rect.collidepoint(event.pos):
+                elif rect_images.get('spear_rect').collidepoint(event.pos):
                     selected_weapon = wm.create_spear()
 
-                elif axe_rect.collidepoint(event.pos):
+                elif rect_images.get('axe_rect').collidepoint(event.pos):
                     selected_weapon = wm.create_axe()
 
                 if selected_weapon is not None:
@@ -157,7 +126,7 @@ while running:
         continue
 
     # fill the screen with a color to wipe away anything from last frame
-    screen.blit(background, (0, 0))
+    screen.blit(env_images.get('background'), (0, 0))
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
@@ -218,7 +187,7 @@ while running:
     #####################
     if main_player.is_attacking():
         direction  = mouse_pos - main_player.get_player_pos()
-        if not main_player.is_dead():    
+        if not main_player.is_dead():   
             affichage_weapon(screen, main_player, main_player.get_attack_end_pos(direction))
         main_player.is_colliding(direction, pm.get_personnage_list())
 

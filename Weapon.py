@@ -1,4 +1,5 @@
 import math, random
+import pygame
 from config import weapon_name_list
 
 class Weapon:
@@ -58,7 +59,7 @@ class Weapon:
     def get_weapon_type(self):
         return self._weapon_type
     
-    def get_image(self):
+    def get_image(self) -> pygame.Surface: 
         return self._image
 
 class Sword(Weapon):

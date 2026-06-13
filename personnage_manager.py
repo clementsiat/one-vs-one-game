@@ -15,7 +15,7 @@ class PersonnageManager():
         self.increment = 0
         self._personnage_list = []
 
-    def add_personnage(self, weapon):
+    def add_personnage(self, weapon=None):
         player_taille = randint(20, 30)
         player_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
         player_img = pygame.transform.scale(player_img, (player_taille*2, player_taille*2))
@@ -49,8 +49,7 @@ class PersonnageManager():
         """
         return self._personnage_list
     
-    def generate_wave(self, world_size, weapon_manager:'WeaponManager'):
-        enemy_nb = randint(2, 4)
+    def generate_wave(self, world_size, weapon_manager:'WeaponManager', enemy_nb = 0):
         for i in range(enemy_nb):
             equipped_weapon = choice(
             [weapon_manager.create_axe(),
