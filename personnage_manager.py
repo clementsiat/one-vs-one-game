@@ -2,9 +2,7 @@ from random import randint, choice
 from Personnage import Personnage
 from config import name_list
 import pygame
-from Weapon import Sword
-from Weapon import Spear
-from Weapon import Dagger
+from weapon_manager import WeaponManager
 
 class PersonnageManager():
     _instance = None
@@ -51,6 +49,18 @@ class PersonnageManager():
         """
         return self._personnage_list
     
+    def generate_wave(self, world_size, weapon_manager:'WeaponManager'):
+        enemy_nb = randint(2, 4)
+        for i in range(enemy_nb):
+            equipped_weapon = choice(
+            [weapon_manager.create_axe(),
+            weapon_manager.create_dagger(), 
+            weapon_manager.create_spear(), 
+            weapon_manager.create_sword()])
+            new_personnage = self.add_personnage(equipped_weapon)
+            new_personnage.set_player_pos(pygame.Vector2(randint(0 + new_personnage.get_taille(), world_size[0]), randint(0 +  new_personnage.get_taille(), world_size[1])))
+            
+
 pm : PersonnageManager = PersonnageManager.get_instance()
 
 

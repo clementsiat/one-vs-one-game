@@ -9,7 +9,7 @@ def is_colliding(player_pos, end_pos, enemy_pos):
     player_pos : tuple (x, y)
     end_pos    : tuple (x, y)
     enemy_pos  : objet avec :
-                 - enemy_pos.x
+                 - enemy_pos.x  
                  - enemy_pos.y
                  - enemy_pos.get_taille()
 

@@ -2,7 +2,7 @@ from random import randint
 from Personnage import Personnage
 from config import weapon_name_list
 import pygame
-from Weapon import Sword, Spear, Dagger
+from Weapon import Sword, Spear, Dagger, Axe
 
 class WeaponManager:
     
@@ -15,7 +15,7 @@ class WeaponManager:
                 {"sword": image_sword}
         """
         self.increment = 0
-        self._image_list = image_list # dict{"dagger": any, "sword": any, "spear": any}
+        self._image_list = image_list 
         self._weapon_list = []
 
 
@@ -40,19 +40,21 @@ class WeaponManager:
             durability=100,
             image= self._image_list.get("dagger")
         )
+    def create_spear(self):
+        return Spear(
+            damage=12,
+            attack_range=130,
+            attack_speed=2,
+            durability=120,
+            image = self._image_list.get("spear"))
 
-# spear = Spear(
-#     damage=12,
-#     attack_range=3.5,
-#     attack_speed=2,
-#     durability=120,
-#     weapon_type="spear"
-# )
+    
 
-# axe = Axe(
-#     damage=15,
-#     attack_range=1.8,
-#     attack_speed=3,
-#     durability=150,
-#     weapon_type="axe"
-# )
+    def create_axe(self):
+        return Axe(
+            damage=20,
+            attack_range=100,
+            attack_speed=0.7,
+            durability=200,
+            image=self._image_list.get("axe")
+        )

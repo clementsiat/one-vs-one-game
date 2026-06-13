@@ -247,3 +247,45 @@ class Dagger(Weapon):
                 touched.append(enemy)
 
         return touched
+
+
+
+class Axe(Weapon):
+
+    def __init__(self, damage, attack_range, attack_speed, durability, image):
+        super().__init__(
+            damage,
+            attack_range,
+            attack_speed,
+            durability,
+            "axe",
+            image
+        )
+
+    def is_colliding(self, start_pos, direction, personnages, owner):
+
+        touched = []
+
+        if direction.length() == 0:
+            return touched
+
+        direction = direction.normalize()
+
+        # centre de la tête de hache
+        axe_center = start_pos + direction * (self.get_attack_range() * 0.7)
+
+        axe_radius = 50
+
+        for enemy in personnages:
+
+            if enemy == owner or enemy.is_dead():
+                continue
+
+            distance = (
+                enemy.get_player_pos() - axe_center
+            ).length()
+
+            if distance <= axe_radius + enemy.get_taille():
+                touched.append(enemy)
+
+        return touched
