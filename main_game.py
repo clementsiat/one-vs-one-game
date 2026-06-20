@@ -7,12 +7,18 @@ from Weapon import Sword, Spear, Dagger, Axe
 import math
 from config import WIDTH, HEIGHT
 from image_manager import im
+from level_manager import level_manager
 
 
 # ---------- INITIALISATION PYGAME ----------
 pygame.init()
+pygame.font.init()
+my_font = pygame.font.SysFont('Comic Sans MS', 30)
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+level_display_time = 0
+
 
 running = True
 dt = 0
@@ -117,8 +123,8 @@ while running:
 
                     main_player = pm.add_personnage(selected_weapon)
                     main_player.set_player_pos(pygame.Vector2(200, 360))
-
-                    pm.generate_wave((WIDTH, HEIGHT), wm)
+                    nombre = level_manager.nombre_enemies()
+                    pm.generate_wave((WIDTH, HEIGHT), wm, nombre)
 
                     game_started = True
 
@@ -127,12 +133,15 @@ while running:
 
     # fill the screen with a color to wipe away anything from last frame
     screen.blit(env_images.get('background'), (0, 0))
+    text_surface = my_font.render('Niveau = ' + str(level_manager.get_level()), False, (255, 255, 255))
+    screen.blit(text_surface, (0, 0))
+    text_surface = my_font.render('Potions = ' + str(main_player._nb_potion), False, (255, 255, 255))
+    screen.blit(text_surface, (0, 50))
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False 
-
     ############################
     # RECUPERATION DES TOUCHES #
     ############################
@@ -146,6 +155,21 @@ while running:
         if main_player._current_action.IDLE:
             direction  = mouse_pos - main_player.get_player_pos()
             main_player._current_action = main_player._current_action.ATTAQUE
+
+    if level_manager.is_level_finished(
+            pm.get_personnage_list(),
+            main_player):
+        level_manager.next_level()
+        nb_enemies = level_manager.nombre_enemies()
+        pm.generate_wave((WIDTH, HEIGHT), wm, nb_enemies)
+        text_level_up = main_player.level_up()
+        text_level_surface = my_font.render(text_level_up, False, (255, 255, 255))
+        level_display_time = 5
+    
+    if level_display_time > 0:
+        screen.blit(text_level_surface, (WIDTH/4, 0))
+        level_display_time -= dt
+
 
     for enemy in pm.get_personnage_list():
         if enemy == main_player:

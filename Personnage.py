@@ -58,6 +58,7 @@ class Personnage:
         self._damaged_by = None
         self._flee_direction = None
         self._player_image = player_image
+        self._nb_potion = 0
 
 
 
@@ -279,6 +280,8 @@ class Personnage:
             self.launch_action(Action.ATTAQUE)
         if self._current_action == Action.IDLE and keys[pygame.K_e]:
             self.launch_action(Action.DEFENSE)
+        if self._current_action == Action.IDLE and keys[pygame.K_r]:
+            self.use_potion()
 
     def check_action_duration(self, dt):
         if self._current_action != Action.IDLE:
@@ -433,6 +436,21 @@ class Personnage:
             return True
         else:
             return False
+        
+    def level_up(self):
+        """"""
+        level_choice = choice(["attack", "dodge", "max_health", "damage"])
+        if level_choice == "attack": self._damage *= 1.2
+        if level_choice == "dodge": self._dodge += 2
+        if level_choice == "max_health": self._max_health *= 1.2
+        if level_choice == "damage": self._damage *= 1.2
+        self._nb_potion += 1
+        return f"{self._name} EST MONTE DE NIVEAU, {level_choice} vient d'augmenter"
+    
+    def use_potion(self):
+        if self._nb_potion > 0:
+            self._nb_potion -= 1
+            self._health = min(self._health + 25, self._max_health)
 
 
 

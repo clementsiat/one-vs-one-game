@@ -22,7 +22,7 @@ class PersonnageManager():
 
         P = Personnage(
             name=choice(name_list), 
-            max_health=randint(50, 500), 
+            max_health=randint(50, 200), 
             max_energy=randint(100, 200), 
             damage=randint(5, 10), 
             defense=randint(1, 10), 
@@ -50,6 +50,7 @@ class PersonnageManager():
         return self._personnage_list
     
     def generate_wave(self, world_size, weapon_manager:'WeaponManager', enemy_nb = 0):
+
         for i in range(enemy_nb):
             equipped_weapon = choice(
             [weapon_manager.create_axe(),
