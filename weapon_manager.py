@@ -1,7 +1,5 @@
 from random import randint
-from Personnage import Personnage
 from config import weapon_name_list
-import pygame
 from Weapon import Sword, Spear, Dagger, Axe
 from image_manager import im
 
@@ -37,7 +35,7 @@ class WeaponManager:
         """
         """
         return Dagger(
-            damage=10,
+            damage=30,
             attack_range=50,
             attack_speed=1.2,
             durability=100,

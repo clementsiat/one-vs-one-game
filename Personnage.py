@@ -2,7 +2,11 @@ from random import choice, randint
 from time import sleep
 import pygame, math
 from enum import Enum
-from Weapon import Sword, Spear, Weapon
+from Weapon import Weapon
+from Inventory import Inventory, inv_dict
+import config
+from weapon_manager import wm
+from Potion import Potion
 
 
 class Action(Enum):
@@ -58,7 +62,8 @@ class Personnage:
         self._damaged_by = None
         self._flee_direction = None
         self._player_image = player_image
-        self._nb_potion = 0
+        self.init_inventory()
+
 
 
 
@@ -262,26 +267,37 @@ class Personnage:
 
         return self._player_pos
    
-    def handle_actions(self, keys, dt):
-        """
-        Docstring for handle_actions
-        
-        :param self: Description
-        :param keys: Description
-        :param dt: Description
-        ----
-        Args :
-            self, keys, dt
-        ----
-        Returns : 
-            current action
-        """
+    def handle_actions(self, keys, events=None):
+        if self.is_dead():
+            return
         if self._current_action == Action.IDLE and keys[pygame.K_a]:
             self.launch_action(Action.ATTAQUE)
         if self._current_action == Action.IDLE and keys[pygame.K_e]:
             self.launch_action(Action.DEFENSE)
-        if self._current_action == Action.IDLE and keys[pygame.K_r]:
-            self.use_potion()
+
+        for key, slot in inv_dict.items():
+            if keys[key]:
+                if slot < len(self._inventory.get_items()):
+                    self._inventory.select(slot)
+                    item = self._inventory.get_selected_item()
+                    if isinstance(item, Weapon):
+                        self._weapon = item
+                        print("Arme équipée :", item)
+                break
+
+        if events:
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key in inv_dict:
+                        slot = inv_dict[event.key]
+                        if slot < len(self._inventory.get_items()):
+                            item = self._inventory.get_items()[slot]
+                            if isinstance(item, Potion):
+                                item.use(self)
+                                self._inventory.remove(item)
+                                print("Potion utilisée !")
+
+        
 
     def check_action_duration(self, dt):
         if self._current_action != Action.IDLE:
@@ -308,6 +324,15 @@ class Personnage:
     ################################
     #####  METHODES DE CLASSE  #####
     ################################
+
+    def init_inventory(self):
+        self._inventory = Inventory()
+        self._inventory.add(wm.create_dagger())
+        self._inventory.add(wm.create_axe())
+        self._inventory.add(wm.create_spear())
+        self._inventory.add(wm.create_sword())
+        self._inventory.add(Potion("Potion de vie", 25))
+        self._inventory.add(Potion("Potion de vie", 25))
 
     def choose_target(self, other_personnages: list["Personnage"]) -> "Personnage":
         """
@@ -439,18 +464,21 @@ class Personnage:
         
     def level_up(self):
         """"""
-        level_choice = choice(["attack", "dodge", "max_health", "damage"])
-        if level_choice == "attack": self._damage *= 1.2
-        if level_choice == "dodge": self._dodge += 2
-        if level_choice == "max_health": self._max_health *= 1.2
-        if level_choice == "damage": self._damage *= 1.2
-        self._nb_potion += 1
+        level_number = randint(1, 100)
+        if level_number > 0 and level_number < config.level_up_attack_proba: 
+            self._damage *= 1.2
+            level_choice = "attack"
+        if level_number > config.level_up_attack_proba and level_number < config.level_up_attack_proba + config.level_up_dodge_proba: 
+            self._dodge += 2
+            level_choice = "dodge"
+        if level_number > config.level_up_attack_proba + config.level_up_dodge_proba and level_number < config.level_up_attack_proba + config.level_up_dodge_proba + config.level_up_health_proba: 
+            self._max_health *= 1.2
+            self._health += self._max_health*0.2/1.2
+            level_choice = "health"
+        self._inventory.add(Potion("Potion de vie", 25))
         return f"{self._name} EST MONTE DE NIVEAU, {level_choice} vient d'augmenter"
-    
-    def use_potion(self):
-        if self._nb_potion > 0:
-            self._nb_potion -= 1
-            self._health = min(self._health + 25, self._max_health)
+
+
 
 
 
@@ -681,6 +709,8 @@ class Personnage:
     ###########################
     #####     GETTERS     #####
     ###########################
+    def get_inventory(self):
+        return self._inventory
 
     def get_player_weapon(self):
         """

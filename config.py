@@ -1,6 +1,10 @@
 WIDTH = 1280
 HEIGHT = 720
 
+level_up_attack_proba = 50
+level_up_dodge_proba = 25
+level_up_health_proba = 25
+
 name_list = [
     "Aegthorn",
     "Uilosra",
