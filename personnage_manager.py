@@ -2,7 +2,7 @@ from random import randint, choice
 from Personnage import Personnage
 from config import name_list
 import pygame
-from weapon_manager import WeaponManager
+from weapon_manager import WeaponManager, wm
 
 class PersonnageManager():
     _instance = None
@@ -16,9 +16,17 @@ class PersonnageManager():
         self._personnage_list = []
 
     def add_personnage(self, weapon=None):
-        player_taille = randint(20, 30)
-        player_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
-        player_img = pygame.transform.scale(player_img, (player_taille*2, player_taille*2))
+        player_taille = randint(10, 50)
+
+        if player_taille >= 40:
+            player_img = pygame.image.load("Images/geant.png").convert_alpha()
+        else:
+            player_img = pygame.image.load("Images/personnnage1.png").convert_alpha()
+
+        player_img = pygame.transform.scale(
+            player_img,
+            (player_taille * 2, player_taille * 2)
+        )
 
         P = Personnage(
             name=choice(name_list), 
@@ -33,7 +41,17 @@ class PersonnageManager():
             weapon = weapon,
             player_image = player_img
         )
+        if P.get_taille() >= 40:
+            P.set_weapon(wm.create_axe())
+        elif P.get_taille() <= 15:
+            P.set_weapon(wm.create_dagger())
+        
         self._personnage_list.append(P)
+        if P.get_taille() >= 40:
+            P._max_health += 500
+            P._health += 500
+        if P.get_taille() <= 15:
+            P._dodge += 20
         self.increment += 1
         return P
 

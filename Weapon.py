@@ -1,8 +1,10 @@
 import math, random
 import pygame
 from config import weapon_name_list
+from Item import Item
 
-class Weapon:
+
+class Weapon(Item):
     def __init__(self, damage, attack_range, attack_speed, durability, weapon_type, image):
         """
         Weapon : classe représentant une arme
@@ -16,13 +18,13 @@ class Weapon:
             weapon_type (str) : type d'arme (ex: "sword", "spear", "axe")
         """
 
+        super().__init__(image)
         self._name = random.choice(weapon_name_list)
         self._damage = damage
         self._attack_range = attack_range
         self._attack_speed = attack_speed
         self._durability = durability
         self._weapon_type = weapon_type
-        self._image = image
         
     def is_colliding(self, start_pos, direction, personnages, owner):
         raise NotImplementedError("Your is_colliding method is not written")      
@@ -276,7 +278,8 @@ class Axe(Weapon):
         axe_center = start_pos + direction * (self.get_attack_range() * 0.7)
 
         axe_radius = 50
-
+        if owner.get_taille() >= 40:
+            axe_radius = 75
         for enemy in personnages:
 
             if enemy == owner or enemy.is_dead():
@@ -287,6 +290,38 @@ class Axe(Weapon):
             ).length()
 
             if distance <= axe_radius + enemy.get_taille():
+                touched.append(enemy)
+
+        return touched
+
+class AdminKnife(Weapon):
+
+    def __init__(self, damage, attack_range, attack_speed, durability, image):
+        super().__init__(
+            damage,
+            attack_range,
+            attack_speed,
+            durability,
+            "admin_knife",
+            image
+        )
+
+    def is_colliding(self, start_pos, direction, personnages, owner):
+        touched = []
+
+        if direction.length() == 0:
+            return touched
+
+        direction = direction.normalize()
+        end_pos = self.get_end_pos(start_pos, direction)
+
+        for enemy in personnages:
+            if enemy == owner or enemy.is_dead():
+                continue
+
+            distance = (enemy.get_player_pos() - end_pos).length()
+
+            if distance <= enemy.get_taille():
                 touched.append(enemy)
 
         return touched

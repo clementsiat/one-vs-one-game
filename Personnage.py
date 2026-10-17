@@ -92,14 +92,6 @@ class Personnage:
             touched_walls.append("Bas")
         return touched_walls
 
-
-    def check_attack_collision(self, personnage_list : list['Personnage'], end_pos):
-        for p in personnage_list:
-            if p != self and not p.is_dead():
-                if self.is_colliding(end_pos, p):
-                    self.attack(p)
-                    self._target = p
-
                     
                                 
 
@@ -229,6 +221,8 @@ class Personnage:
         enemy_touched_list = weapon.is_colliding(self._player_pos, direction, enemy_list, self)
         for enemy in enemy_touched_list:
             self.attack(enemy)
+        return enemy_touched_list
+
         
     def is_idling(self):
         return self._current_action == Action.IDLE
@@ -275,27 +269,29 @@ class Personnage:
         if self._current_action == Action.IDLE and keys[pygame.K_e]:
             self.launch_action(Action.DEFENSE)
 
-        for key, slot in inv_dict.items():
-            if keys[key]:
-                if slot < len(self._inventory.get_items()):
-                    self._inventory.select(slot)
-                    item = self._inventory.get_selected_item()
-                    if isinstance(item, Weapon):
-                        self._weapon = item
-                        print("Arme équipée :", item)
-                break
-
+        
         if events:
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.key in inv_dict:
                         slot = inv_dict[event.key]
+
+                        if slot < len(self._inventory.get_items()):
+                            self._inventory.select(slot)
+                            item = self._inventory.get_selected_item()
+
+                            if isinstance(item, Weapon):
+                                self._weapon = item
+                                print("Arme équipée :", item)
+
+                        # Conserver la gestion des potions
                         if slot < len(self._inventory.get_items()):
                             item = self._inventory.get_items()[slot]
                             if isinstance(item, Potion):
                                 item.use(self)
                                 self._inventory.remove(item)
                                 print("Potion utilisée !")
+
 
         
 
@@ -331,8 +327,18 @@ class Personnage:
         self._inventory.add(wm.create_axe())
         self._inventory.add(wm.create_spear())
         self._inventory.add(wm.create_sword())
-        self._inventory.add(Potion("Potion de vie", 25))
-        self._inventory.add(Potion("Potion de vie", 25))
+        self._inventory.add(Potion("Potion de vie", 25, None))
+        self._inventory.add(Potion("Potion de vie", 25, None))
+        self._inventory.add(wm.create_admin_knife())
+
+        # Le sélecteur jaune et l'arme équipée doivent désigner le même objet.
+        if self._weapon is not None:
+            type_equipe = self._weapon.get_weapon_type()
+            for index, item in enumerate(self._inventory.get_items()):
+                if isinstance(item, Weapon) and item.get_weapon_type() == type_equipe:
+                    self._weapon = item
+                    self._inventory.select(index)
+                    break
 
     def choose_target(self, other_personnages: list["Personnage"]) -> "Personnage":
         """
@@ -344,7 +350,6 @@ class Personnage:
         Returns:
             Personnage: Personnage cible
         """
-        # TODO: Implement the choose_target method
         valid_targets = []
         for personnage in other_personnages:
             if personnage != self and not personnage.is_dead():
@@ -468,14 +473,14 @@ class Personnage:
         if level_number > 0 and level_number < config.level_up_attack_proba: 
             self._damage *= 1.2
             level_choice = "attack"
-        if level_number > config.level_up_attack_proba and level_number < config.level_up_attack_proba + config.level_up_dodge_proba: 
+        elif level_number > config.level_up_attack_proba and level_number < config.level_up_attack_proba + config.level_up_dodge_proba: 
             self._dodge += 2
             level_choice = "dodge"
-        if level_number > config.level_up_attack_proba + config.level_up_dodge_proba and level_number < config.level_up_attack_proba + config.level_up_dodge_proba + config.level_up_health_proba: 
+        elif level_number > config.level_up_attack_proba + config.level_up_dodge_proba and level_number <= config.level_up_attack_proba + config.level_up_dodge_proba + config.level_up_health_proba: 
             self._max_health *= 1.2
             self._health += self._max_health*0.2/1.2
             level_choice = "health"
-        self._inventory.add(Potion("Potion de vie", 25))
+        self._inventory.add(Potion("Potion de vie", 25, None))
         return f"{self._name} EST MONTE DE NIVEAU, {level_choice} vient d'augmenter"
 
 

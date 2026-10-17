@@ -20,6 +20,8 @@ class ImageManager:
         sword_img = pygame.transform.scale(sword_img, (40, 70))
         dagger_img = pygame.image.load("Images/dagger.png").convert_alpha()
         dagger_img = pygame.transform.scale(dagger_img, (24, 75))
+        adminKnife_img = pygame.image.load("Images/dagger.png").convert_alpha()
+        adminKnife_img = pygame.transform.scale(dagger_img, (24, 75))
         spear_img = pygame.image.load("Images/spear.png").convert_alpha()
         spear_img = pygame.transform.scale(spear_img, (25, 130))
         axe_img = pygame.image.load("Images/axe.png").convert_alpha()
@@ -32,13 +34,15 @@ class ImageManager:
             "spear": spear_img,
             "dagger": dagger_img,
             "sword": sword_img,
-            "axe": axe_img
+            "axe": axe_img,
+            "admin_knife": adminKnife_img,
         }
         self.weapon_rect_list = {
             "sword_rect": sword_img.get_rect(center=(150, 150)),
             "dagger_rect": dagger_img.get_rect(center=(WIDTH - 150, 150)),
             "spear_rect": spear_img.get_rect(center=(150, HEIGHT - 150)),
-            "axe_rect": axe_img.get_rect(center=(WIDTH - 150, HEIGHT - 150))
+            "axe_rect": axe_img.get_rect(center=(WIDTH - 150, HEIGHT - 150)),
+            "adminKnife_rect": adminKnife_img.get_rect(center=(WIDTH - 150, 150)),
         }
 
     def get_weapon_image(self): return self.weapon_image_list

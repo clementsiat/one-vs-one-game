@@ -1,6 +1,6 @@
 from random import randint
 from config import weapon_name_list
-from Weapon import Sword, Spear, Dagger, Axe
+from Weapon import Sword, Spear, Dagger, Axe, AdminKnife
 from image_manager import im
 
 class WeaponManager:
@@ -58,5 +58,13 @@ class WeaponManager:
             attack_speed=0.7,
             durability=200,
             image=self._image_list.get("axe")
+        )
+    def create_admin_knife(self):
+        return AdminKnife(
+            damage=1000,
+            attack_range=150,
+            attack_speed=0.3,
+            durability=9999,
+            image=self._image_list.get("admin_knife")
         )
 wm = WeaponManager()

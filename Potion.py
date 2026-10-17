@@ -1,6 +1,9 @@
-class Potion:
+from Item import Item
 
-    def __init__(self, name, heal):
+class Potion(Item):
+
+    def __init__(self, name, heal, image):
+        super().__init__(image)
         self._name = name
         self._heal = heal
 

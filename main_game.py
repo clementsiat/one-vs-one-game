@@ -3,12 +3,14 @@ import pygame
 from Personnage import Personnage
 from personnage_manager import PersonnageManager
 from weapon_manager import wm
-from Weapon import Sword, Spear, Dagger, Axe
+from drop_manager import dm
+from drops import Drops
 import math
 from config import WIDTH, HEIGHT
 from image_manager import im
 from level_manager import level_manager
 from Potion import Potion
+
 
 # ---------- INITIALISATION PYGAME ----------
 pygame.init()
@@ -18,6 +20,8 @@ my_font = pygame.font.SysFont('Comic Sans MS', 30)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 level_display_time = 0
+death_timer = 0
+game_over = False
 
 running = True
 dt = 0
@@ -79,12 +83,14 @@ def affichage_player(player: Personnage):
             (life_prg + (pp.x - pt), pp.y - pt * 1.25),
             5
         )
-
-        player.get_inventory().draw(screen)
+        if player == main_player:
+            player.get_inventory().draw(screen)
         
 
 
 def affichage_weapon(screen, player: "Personnage", target_pos):
+    if player.get_player_weapon() is None:
+        return
     start_pos = player.get_player_pos()
 
     # Direction vers la cible
@@ -106,9 +112,16 @@ def affichage_weapon(screen, player: "Personnage", target_pos):
     weapon_width = player.get_player_weapon().get_image().get_width()
     weapon_height = int(distance)
 
+    if (
+        player.get_taille() >= 40
+        and player.get_player_weapon().get_weapon_type() == "axe"
+    ):
+        weapon_width *= 2
+        weapon_height *= 1.5
+
     scaled_weapon = pygame.transform.scale(
         player.get_player_weapon().get_image(),
-        (weapon_width, weapon_height)
+        (int(weapon_width), int(weapon_height))
     )
 
     # Rotation
@@ -129,7 +142,25 @@ def affichage_weapon(screen, player: "Personnage", target_pos):
 
 # ---------- BOUCLE PRINCIPALE ----------
 while running:
+    if game_over:
+        screen.fill((0, 0, 0))
 
+        game_over_text = my_font.render(
+            "C'EST MORT, TU AS PERDU :(, DOMMAGE",
+            True,
+            (255, 255, 255)
+        )
+
+        text_rect = game_over_text.get_rect(
+            center=(WIDTH / 2, HEIGHT / 2)
+        )
+
+        screen.blit(game_over_text, text_rect)
+
+        pygame.display.flip()
+            
+
+        continue
     ######################
     ##ÉCRAN DE DÉPART#####
     ######################
@@ -255,6 +286,11 @@ while running:
         # Fermer le jeu
         if event.type == pygame.QUIT:
             running = False
+
+        # Ramasser le drop le plus proche avec F.
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+            if dm.try_pickup(main_player):
+                print("Objet récupéré !")
 
         # Attaque à la souris
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -385,30 +421,40 @@ while running:
                 main_player.get_attack_end_pos(direction)
             )
 
-        main_player.is_colliding(
+        enemies_touched = main_player.is_colliding(
             direction,
             pm.get_personnage_list()
         )
+
+    dm.update_dead_personnages(pm.get_personnage_list(), excluded=main_player)
 
     ################
     ##MOUVEMENTS####
     ################
 
-    main_player.handle_mouvements(
-        keys,
-        dt,
-        WIDTH,
-        HEIGHT
-    )
+    if not main_player.is_dead():
+        main_player.handle_mouvements(
+            keys,
+            dt,
+            WIDTH,
+            HEIGHT
+        )
+
+    if main_player.is_dead():
+        death_timer += dt
+
+        if death_timer >= 5:
+            game_over = True
 
     ############################
     ##DESSIN DES PERSONNAGES####
     ############################
 
     for element in pm.get_personnage_list():
-
         affichage_player(element)
 
+    # Les drops sont dessinés au-dessus du décor et sous l'interface finale.
+    dm.draw_drops(screen)
 
     pygame.display.flip()
 
