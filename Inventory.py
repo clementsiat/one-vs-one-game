@@ -1,6 +1,6 @@
-import pygame
+import pygame, math
 from Item import Item
-
+from copy import copy
 
 class Inventory:
     def __init__(self):
@@ -8,10 +8,42 @@ class Inventory:
         self._selected_item = 0
         self._inventory_size = 10
 
-    def add(self, item):
+    def add(self, item : "Item"):
         if item is not None and len(self._items) < self._inventory_size:
-            self._items.append(item)
-            return True
+            if not item.is_stackable():     
+                self._items.append(item)
+                return True
+            else:
+                print("ajout stackable")
+                for element in self._items:
+                    if isinstance(element, type(item)) and item._current_stack > 0:
+                        print("un objet existe déjà dans l'inventaire")
+                        if element._current_stack == element._max_stack:
+                            continue
+                        elif element._current_stack + item._current_stack <= element._max_stack:
+                            element._current_stack += item._current_stack
+                            item._current_stack = 0
+                            print("current stack OK tout est ajouté")
+                        else:
+                            stack_to_fill = element._max_stack - element._current_stack
+                            element._current_stack += stack_to_fill
+                            item._current_stack -= stack_to_fill
+                            print("current stack NOK ajout partiel")
+                if item._current_stack > 0 and len(self._items) < self._inventory_size:
+                    qty_to_add = item._current_stack
+                    print(f"Nouvelle quantité a ajouter: {qty_to_add}")
+                    for i in range(0, int(math.ceil(item._max_stack / item._current_stack))):
+                        if qty_to_add >= item._max_stack:
+                            item._current_stack = item._max_stack
+                            qty_to_add -= item._max_stack
+                            self._items.append(copy(item))
+                            print("Nouvelle stack complete")
+                        else:
+                            item._current_stack = qty_to_add
+                            self._items.append(copy(item))
+                            print("Nouvelle stack partielle")
+                        return True    
+        
         return False
 
     def draw(self, screen : pygame.Surface):
@@ -29,8 +61,18 @@ class Inventory:
                 continue
             item = self._items[i]
             image = item.get_image() if hasattr(item, "get_image") else getattr(item, "_image", None)
-            if image is None:
-                continue
+            if image is not None:
+                image_diagonale = pygame.transform.rotate(image, -45)
+                taille_max = size - 12
+                largeur_img, hauteur_img = image_diagonale.get_size()
+                facteur = min(taille_max / max(1, largeur_img), taille_max / max(1, hauteur_img))
+                nouvelle_taille = (max(1, int(largeur_img * facteur)), max(1, int(hauteur_img * facteur)))
+                image_finale = pygame.transform.smoothscale(image_diagonale, nouvelle_taille)
+                screen.blit(image_finale, image_finale.get_rect(center=(x + size // 2, y + size // 2)))
+            if item.is_stackable():
+                font = pygame.font.SysFont("Arial", 16)
+                texte = font.render(str(item._current_stack), True, (0, 0, 0))
+                screen.blit(texte, (x + size - 18, y + size - 20))
             image_diagonale = pygame.transform.rotate(image, -45)
             taille_max = size - 12
             largeur_img, hauteur_img = image_diagonale.get_size()

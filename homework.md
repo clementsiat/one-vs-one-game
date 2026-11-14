@@ -42,3 +42,29 @@ Drop manager va appeler l'affichage des drop Qui va appeler l'affichage des item
 Il faudra ensuite gérer en fonction de la taille de l'image et la position du drop Une manière de récupérer le drop dans l'inventaire par le personnage
 
 Petite chose : Corriger le sélecteur jaune en fonction de l'objet sélectionné dans l'inventaire , Enquêter sur la place de l'Admin Dagger dans l'inventaire
+
+
+
+Finaliser  Le Drop des armes En faisant attention A ce que chaque classe soit responsable de ces éléments. C'est à dire les armes s'occupent des armes les drops s'occupent des drops et les personnages s'occupent des personnages
+
+Weapon va s'occuper des mutations Des armes à chaque fois qu'un nouveau drop va se faire Avec la fonction mutate. On pourra aggrémenter l'enum de la mutation avec autant de valeurs que souhaité pour donner de nouvellles perspectives aux armes et a leurs mutations.
+
+Donc au niveau du drop:
+
+- main player tape un personnage
+- on détermine dans personnage_manager quels sont les personnages morts. 
+- S'il était pas encore dans la liste des personnages morts on l'ajoute et on en fait un drop ( a partir de son arme équipée pour plus de réalisme ou une arme random au choix.)
+- C'est le weapon qui va s'occuper de la partie mutate pour changer les valeur de l'arme qui sera droppée.
+- Ensuite l'arme sera passée ( toujours depuis la fonction de la mort de personnage dans personnage_manager ) au gestionnaire des drops pour en créer un nouveau.
+- F permettra toujours de le récupérer mais il faut que cette capacité ( F ) soit propre au Personnage et non pas au drop, au manager ou autre. ( c'est lui qui réalise l'action ).
+- Permettre avec V de vendre l'arme actuellement selectionnée contre une potion ( c'est toujours le personnage qui réalise la vente, ou alors un VenteManager si besoin ).
+
+# Devoirs du 14/11
+
+Réaliser la consommation des potions stackées.
+Attention La consommation Doit se passer pour tous les objets stackables pas que les potions.
+Trouver une image de potion Et travailler l'affichage Du nombre de stack dans l'inventaire.
+
+- Gagner du gold au kill
+- Afficher une couleur de fond selon la rareté d'un objet dans l'inventaire
+- Bonus: Bossrr sur des salles "Forge" ou on peut payer un mutate.

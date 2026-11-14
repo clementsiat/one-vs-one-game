@@ -1,9 +1,24 @@
+from enum import Enum
 WIDTH = 1280
 HEIGHT = 720
 
 level_up_attack_proba = 50
 level_up_dodge_proba = 25
 level_up_health_proba = 25
+
+class Mutation(Enum):
+    SILVER = {"prefixe": "Silver", 
+              "damage": 1.5, 
+              "filtre": "black"}
+    GOLD = {"prefixe": "Gold", 
+            "damage": 2, 
+            "filtre": "red"}
+    BRONZE = {"prefixe": "Bronze", 
+              "damage": 1.2, 
+              "filtre": "blue"}
+    WOOD = {"prefixe": "Wood", 
+            "damage": 0.9, 
+            "filtre": "white"}
 
 name_list = [
     "Aegthorn",

@@ -3,7 +3,7 @@ from Item import Item
 class Potion(Item):
 
     def __init__(self, name, heal, image):
-        super().__init__(image)
+        super().__init__(image, stackable = True, max_stack = 16)
         self._name = name
         self._heal = heal
 

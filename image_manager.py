@@ -7,6 +7,7 @@ class ImageManager:
         self.weapon_image_list = {}
         self.weapon_rect_list = {}
         self.environnement_image_list = {}
+        self._potion_image = None
 
     def load_images(self):
         # ---------- CHARGEMENT DES IMAGES ----------
@@ -26,6 +27,9 @@ class ImageManager:
         spear_img = pygame.transform.scale(spear_img, (25, 130))
         axe_img = pygame.image.load("Images/axe.png").convert_alpha()
         axe_img = pygame.transform.scale(axe_img, (37, 100))
+        potion_img = pygame.image.load("Images/Potion.png").convert_alpha()
+        potion_img = pygame.transform.scale(potion_img, (40, 40))  
+        self.potion_image = potion_img
         self.environnement_image_list = {
             "background": background,
             "starting_screen": starting_screen
@@ -44,7 +48,7 @@ class ImageManager:
             "axe_rect": axe_img.get_rect(center=(WIDTH - 150, HEIGHT - 150)),
             "adminKnife_rect": adminKnife_img.get_rect(center=(WIDTH - 150, 150)),
         }
-
+    def get_potion_image(self): return self.potion_image
     def get_weapon_image(self): return self.weapon_image_list
     def get_rect(self): return self.weapon_rect_list
     def get_environnement(self): return self.environnement_image_list

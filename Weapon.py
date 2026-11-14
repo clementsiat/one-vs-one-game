@@ -1,7 +1,16 @@
 import math, random
 import pygame
 from config import weapon_name_list
+from enum import Enum
 from Item import Item
+
+class Mutation(Enum):
+    BRONZE = 0.8
+    SILVER = 1.2
+    GOLD = 2
+    DIAMANT = 5
+    PLATINE = 7
+    GOD = 10
 
 
 class Weapon(Item):
@@ -18,13 +27,45 @@ class Weapon(Item):
             weapon_type (str) : type d'arme (ex: "sword", "spear", "axe")
         """
 
-        super().__init__(image)
+        super().__init__(image, stackable = False)
         self._name = random.choice(weapon_name_list)
         self._damage = damage
         self._attack_range = attack_range
         self._attack_speed = attack_speed
         self._durability = durability
         self._weapon_type = weapon_type
+        self._rarity = Mutation.BRONZE
+
+
+    def mutate(self):
+
+        nombre = random.uniform(1, 100)
+
+        if 1 <= nombre <= 40:
+            self._mutation = Mutation.BRONZE
+
+        elif 41 <= nombre <= 70:
+            self._mutation = Mutation.SILVER
+
+        elif 71 <= nombre <= 85:
+            self._mutation = Mutation.GOLD
+
+        elif 76 <= nombre <= 90:
+            self._mutation = Mutation.DIAMANT
+        
+        elif 91 <= nombre <= 99.7:
+            self._mutation = Mutation.PLATINE
+
+        else:
+            self._mutation = Mutation.GOD
+
+        multiplicateur = self._mutation.value
+
+        self._damage *= multiplicateur
+        self._durability *= multiplicateur
+
+        print(f"Nouvelle rareté : {self._mutation.name}")
+        
         
     def is_colliding(self, start_pos, direction, personnages, owner):
         raise NotImplementedError("Your is_colliding method is not written")      
@@ -36,6 +77,10 @@ class Weapon(Item):
     ###########
     # GETTERS #
     ###########
+
+    def get_mutation(self):
+        return self._mutation
+
     def get_end_pos(self, init_pos, direction):
         if direction.length() == 0:
             return init_pos

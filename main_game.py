@@ -257,10 +257,10 @@ while running:
     )
 
     # Nombre de potions
-    nb_potions = sum(
-        isinstance(item, Potion)
-        for item in main_player.get_inventory().get_items()
-    )
+    nb_potions = 0
+    for item in main_player.get_inventory().get_items():
+        if isinstance(item, Potion):
+            nb_potions += item._current_stack
 
     text_surface = my_font.render(
         'Potions = ' + str(nb_potions),
@@ -289,8 +289,7 @@ while running:
 
         # Ramasser le drop le plus proche avec F.
         if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
-            if dm.try_pickup(main_player):
-                print("Objet récupéré !")
+            main_player.ramasser_drop(dm)
 
         # Attaque à la souris
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -426,7 +425,7 @@ while running:
             pm.get_personnage_list()
         )
 
-    dm.update_dead_personnages(pm.get_personnage_list(), excluded=main_player)
+    pm.check_dead_personnage()
 
     ################
     ##MOUVEMENTS####

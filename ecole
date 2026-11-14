@@ -1,0 +1,6 @@
+def moyenne(tab):
+    chiffres = 0
+    for element in tab:
+        chiffres += element
+    return chiffres / len(tab)
+

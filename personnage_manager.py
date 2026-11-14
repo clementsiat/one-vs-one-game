@@ -3,6 +3,8 @@ from Personnage import Personnage
 from config import name_list
 import pygame
 from weapon_manager import WeaponManager, wm
+from drops import Drops
+from drop_manager import dm
 
 class PersonnageManager():
     _instance = None
@@ -14,6 +16,22 @@ class PersonnageManager():
     def __init__(self):
         self.increment = 0
         self._personnage_list = []
+        self._personnage_dead_list = []
+     
+    def check_dead_personnage(self):
+        for personnage in self._personnage_list:
+            if personnage.is_dead() and personnage not in self._personnage_dead_list:
+                self._personnage_dead_list.append(personnage)
+                weapon = personnage.get_player_weapon()
+                weapon.mutate()
+                position = personnage.get_player_pos()
+                nouveau_drop = Drops(weapon, position)
+                dm.new_drops(nouveau_drop)
+                print(
+                    personnage.get_name(),
+                    "est mort et a laissé tomber :",
+                    weapon.get_name()
+                )
 
     def add_personnage(self, weapon=None):
         player_taille = randint(10, 50)

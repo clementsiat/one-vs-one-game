@@ -7,6 +7,7 @@ from Inventory import Inventory, inv_dict
 import config
 from weapon_manager import wm
 from Potion import Potion
+from image_manager import im
 
 
 class Action(Enum):
@@ -273,6 +274,8 @@ class Personnage:
         if events:
             for event in events:
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_v:
+                        self.vendre_arme_selectionnee()
                     if event.key in inv_dict:
                         slot = inv_dict[event.key]
 
@@ -289,7 +292,9 @@ class Personnage:
                             item = self._inventory.get_items()[slot]
                             if isinstance(item, Potion):
                                 item.use(self)
-                                self._inventory.remove(item)
+                                item._current_stack -= 1
+                                if item._current_stack <= 0:
+                                    self._inventory.remove(item)
                                 print("Potion utilisée !")
 
 
@@ -322,13 +327,14 @@ class Personnage:
     ################################
 
     def init_inventory(self):
+        init_potions = 3
         self._inventory = Inventory()
         self._inventory.add(wm.create_dagger())
         self._inventory.add(wm.create_axe())
         self._inventory.add(wm.create_spear())
         self._inventory.add(wm.create_sword())
-        self._inventory.add(Potion("Potion de vie", 25, None))
-        self._inventory.add(Potion("Potion de vie", 25, None))
+        for i in range(0,init_potions):
+            self._inventory.add(Potion("Potion de vie", 25, im.get_potion_image()))
         self._inventory.add(wm.create_admin_knife())
 
         # Le sélecteur jaune et l'arme équipée doivent désigner le même objet.
@@ -340,6 +346,43 @@ class Personnage:
                     self._inventory.select(index)
                     break
 
+    def ramasser_drop(self, drop_manager, max_distance=48):
+        if self.is_dead():
+            return False
+        inventaire = self.get_inventory()
+        objets = inventaire.get_items()
+        if len(objets) >= inventaire._inventory_size:
+            return False
+        for drop in drop_manager.get_drops():
+            if drop.is_near(self.get_player_pos(), max_distance):
+                objet = drop.get_item()
+                if inventaire.add(objet):
+                    drop_manager.remove_drop(drop)
+                    print("Objet récupéré :", objet)
+                    return True
+
+        return False
+    
+    def vendre_arme_selectionnee(self):
+        if self.is_dead():
+            return False
+        inventaire = self.get_inventory()
+        item = inventaire.get_selected_item()
+        if not isinstance(item, Weapon):
+            print("Tu dois sélectionner une arme !")
+            return False
+        inventaire.remove(item)
+        nouvelle_potion = Potion(
+            "Potion de vie",
+            25,
+            im.get_potion_image()
+        )
+        inventaire.add(nouvelle_potion)
+        print("Arme vendue ! Tu as obtenu une potion.")
+
+        return True
+
+    
     def choose_target(self, other_personnages: list["Personnage"]) -> "Personnage":
         """
         choose_target : Fonction qui choisit le personnage cible parmi la liste des personnages
@@ -480,7 +523,7 @@ class Personnage:
             self._max_health *= 1.2
             self._health += self._max_health*0.2/1.2
             level_choice = "health"
-        self._inventory.add(Potion("Potion de vie", 25, None))
+        self._inventory.add(Potion("Potion de vie", 25, im.get_potion_image()))
         return f"{self._name} EST MONTE DE NIVEAU, {level_choice} vient d'augmenter"
 
 
