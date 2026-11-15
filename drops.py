@@ -12,8 +12,13 @@ class Drops:
         else:
             self._position = pygame.Vector2(position, pos_y)
 
+        self._drop_time = pygame.time.get_ticks()
+
     def get_item(self):
         return self._objet
+
+    def is_expired(self):
+        return pygame.time.get_ticks() - self._drop_time >= 30000
 
     def get_position(self):
         return self._position

@@ -43,6 +43,7 @@ class Weapon(Item):
         self._attack_range = attack_range
         self._attack_speed = attack_speed
         self._durability = durability
+        self._max_durability = durability
         self._weapon_type = weapon_type
         self._mutation = Mutation.BRONZE
 
@@ -96,13 +97,31 @@ class Weapon(Item):
     def is_colliding(self, start_pos, direction, personnages, owner):
         raise NotImplementedError("Your is_colliding method is not written")      
 
-     
+    def use_durability(self, amount):
+        self._durability -= amount
 
+        if self._durability <= 0:
+            self._durability = 0
+            return True
 
+        return False
+
+    def repair(self, amount):
+        self._durability += amount
+
+        if self._durability > self._max_durability:
+            self._durability = self._max_durability
+
+    def is_broken(self):
+        return self._durability <= 0
    
     ###########
     # GETTERS #
     ###########
+
+
+    def get_durability(self):
+        return self._durability
 
     def get_mutation(self):
         return self._mutation
@@ -134,6 +153,8 @@ class Weapon(Item):
     
     def get_image(self) -> pygame.Surface: 
         return self._image
+
+
 
 class Sword(Weapon):
 
@@ -211,10 +232,6 @@ class Sword(Weapon):
                 touched.append(enemy)
 
         return touched
-
-
-
-
 
 class Spear(Weapon):
 

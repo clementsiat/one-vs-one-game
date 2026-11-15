@@ -165,7 +165,6 @@ class Personnage:
             self._attack_timer = 0
             self._next_attack_time = randint(10, 15)
 
-            
     def auto_defense(self,dt):
         if self._current_action != Action.IDLE:
             return
@@ -216,12 +215,22 @@ class Personnage:
         Returns:
 
         """
+        if self._weapon is None or self._weapon.is_broken():
+            return []
         weapon : Weapon = self._weapon
-        enemy_touched_list = weapon.is_colliding(self._player_pos, direction, enemy_list, self)
-        for enemy in enemy_touched_list:
-            self.attack(enemy)
-        return enemy_touched_list
+        enemy_touched_list = weapon.is_colliding(
+            self._player_pos, direction, enemy_list, self
+        )
 
+        if enemy_touched_list:
+            for enemy in enemy_touched_list:
+                self.attack(enemy)
+
+            if self._weapon is not None:
+                if self._weapon.use_durability(1):
+                    print("Ton arme est cassée !")
+
+        return enemy_touched_list
         
     def is_idling(self):
         return self._current_action == Action.IDLE
@@ -282,8 +291,11 @@ class Personnage:
                             item = self._inventory.get_selected_item()
 
                             if isinstance(item, Weapon):
-                                self._weapon = item
-                                print("Arme équipée :", item)
+                                if not item.is_broken():
+                                    self._weapon = item
+                                    print("Arme équipée :", item)
+                                else:
+                                    print("Cette arme est cassée !")
 
                         # Conserver la gestion des potions
                         if slot < len(self._inventory.get_items()):

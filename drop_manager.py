@@ -12,10 +12,19 @@ class DropManager:
             self._dropable.append(drop)
 
     def draw_drops(self, screen):
+        self._dropable = [
+            drop for drop in self._dropable
+            if not drop.is_expired()
+        ]
+
         for drop in self._dropable:
             drop.draw(screen)
 
     def get_drops(self):
+        self._dropable = [
+            drop for drop in self._dropable
+            if not drop.is_expired()
+        ]
         return self._dropable
 
     def remove_drop(self, drop):

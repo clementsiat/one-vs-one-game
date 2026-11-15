@@ -19,7 +19,6 @@ class WeaponManager:
     def init_images(self):
         self._image_list = im.get_weapon_image()
 
-
     def create_sword(self):
         """
         """
@@ -32,6 +31,7 @@ class WeaponManager:
         )
 
     def create_dagger(self):
+
         """
         """
         return Dagger(
@@ -41,6 +41,7 @@ class WeaponManager:
             durability=100,
             image= self._image_list.get("dagger")
         )
+
     def create_spear(self):
         return Spear(
             damage=12,
@@ -48,8 +49,6 @@ class WeaponManager:
             attack_speed=2,
             durability=120,
             image = self._image_list.get("spear"))
-
-    
 
     def create_axe(self):
         return Axe(
@@ -59,6 +58,7 @@ class WeaponManager:
             durability=200,
             image=self._image_list.get("axe")
         )
+
     def create_admin_knife(self):
         return AdminKnife(
             damage=1000,
