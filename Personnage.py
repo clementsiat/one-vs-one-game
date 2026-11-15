@@ -58,6 +58,7 @@ class Personnage:
         self._compteurDoubleAttaque = 0
         self._compteurDodge = 0
         self._compteurKill = 0
+        self._gold = 0
         self._target = None
         self._ai_escape_direction = pygame.Vector2(0, 0)
         self._damaged_by = None
@@ -92,9 +93,6 @@ class Personnage:
         if self._player_pos.y + self.get_taille() == world_height:
             touched_walls.append("Bas")
         return touched_walls
-
-                    
-                                
 
     def bot_move(self, dt, world_width, world_height):
         # Si on est mort - on fait rien    
@@ -297,9 +295,6 @@ class Personnage:
                                     self._inventory.remove(item)
                                 print("Potion utilisée !")
 
-
-        
-
     def check_action_duration(self, dt):
         if self._current_action != Action.IDLE:
             self._current_action_duration += dt
@@ -329,13 +324,11 @@ class Personnage:
     def init_inventory(self):
         init_potions = 3
         self._inventory = Inventory()
-        self._inventory.add(wm.create_dagger())
-        self._inventory.add(wm.create_axe())
-        self._inventory.add(wm.create_spear())
-        self._inventory.add(wm.create_sword())
-        for i in range(0,init_potions):
+        if self._weapon is not None:
+            self._inventory.add(self._weapon)
+            self._inventory.select(0)
+        for i in range(0, init_potions):
             self._inventory.add(Potion("Potion de vie", 25, im.get_potion_image()))
-        self._inventory.add(wm.create_admin_knife())
 
         # Le sélecteur jaune et l'arme équipée doivent désigner le même objet.
         if self._weapon is not None:
@@ -381,7 +374,6 @@ class Personnage:
         print("Arme vendue ! Tu as obtenu une potion.")
 
         return True
-
     
     def choose_target(self, other_personnages: list["Personnage"]) -> "Personnage":
         """
@@ -401,7 +393,6 @@ class Personnage:
         target = choice(valid_targets)
         return target
         
-
     def attack(self, to_target: "Personnage"):
         """
         attack : Fonction qui attaque le personnage cible
@@ -426,6 +417,7 @@ class Personnage:
             print(f"{self.get_name()} a effectué une double attaque")
         if to_target.is_dead():
             self._compteurKill += 1
+            self._gold += randint(1, 10)
 
         direction_to_target = to_target.get_player_pos() - self._player_pos
         if direction_to_target.length() == 0:
@@ -440,8 +432,6 @@ class Personnage:
             direction = mouse_vector
 
         self.set_attack_direction(direction)
-
-
  
     def get_hit(self, damage, bypass = False, source = None):
         """
@@ -473,7 +463,6 @@ class Personnage:
         if self.is_dead():
             print(f"{self.get_name()} est mort!!!  :(  ")
             print(self)
-
 
     def rest(self):
         """
@@ -511,21 +500,24 @@ class Personnage:
             return False
         
     def level_up(self):
-        """"""
         level_number = randint(1, 100)
-        if level_number > 0 and level_number < config.level_up_attack_proba: 
+
+        if level_number <= config.level_up_attack_proba:
             self._damage *= 1.2
             level_choice = "attack"
-        elif level_number > config.level_up_attack_proba and level_number < config.level_up_attack_proba + config.level_up_dodge_proba: 
+
+        elif level_number <= config.level_up_attack_proba + config.level_up_dodge_proba:
             self._dodge += 2
             level_choice = "dodge"
-        elif level_number > config.level_up_attack_proba + config.level_up_dodge_proba and level_number <= config.level_up_attack_proba + config.level_up_dodge_proba + config.level_up_health_proba: 
-            self._max_health *= 1.2
-            self._health += self._max_health*0.2/1.2
-            level_choice = "health"
-        self._inventory.add(Potion("Potion de vie", 25, im.get_potion_image()))
-        return f"{self._name} EST MONTE DE NIVEAU, {level_choice} vient d'augmenter"
 
+        else:
+            self._max_health *= 1.2
+            self._health += self._max_health * 0.2 / 1.2
+            level_choice = "health"
+
+        self._inventory.add(Potion("Potion de vie", 25, im.get_potion_image()))
+
+        return f"{self._name} EST MONTE DE NIVEAU, {level_choice} vient d'augmenter"
 
 
 
@@ -603,7 +595,6 @@ class Personnage:
         """
         self._taille = taille
 
-
     def set_player_pos(self, player_pos):
         """
         set_pos_x : Donnes la position du joueur
@@ -615,8 +606,6 @@ class Personnage:
             None
         """
         self._player_pos = player_pos
-
-
 
     def set_dodge(self, dodge):
         """
@@ -642,9 +631,6 @@ class Personnage:
         """
         self._doubleAttaque = doubleAttaque
 
-
-
-
     def set_name(self, name):
         """
         set_name : Modifie le nom du personnage
@@ -656,9 +642,6 @@ class Personnage:
             None
         """
         self._name = name
-
-
-
 
     def set_max_health(self, max_health):
         """
@@ -672,9 +655,6 @@ class Personnage:
         """
         self._max_health = max_health
 
-
-
-
     def set_health(self, health):
         """
         set_health : Modifie les points de vie actuels du personnage
@@ -686,9 +666,6 @@ class Personnage:
             None
         """
         self._health = health
-
-
-
 
     def set_max_energy(self, max_energy):
         """
@@ -702,9 +679,6 @@ class Personnage:
         """
         self._max_energy = max_energy
 
-
-
-
     def set_energy(self, energy):
         """
         set_energy : Modifie les points d'énergie actuels du personnage
@@ -717,9 +691,6 @@ class Personnage:
         """
         self._energy = energy
 
-
-
-
     def set_damage(self, damage):
         """
         set_damage : Modifie les dégâts du personnage
@@ -731,9 +702,6 @@ class Personnage:
             None
         """
         self._damage = damage
-
-
-
 
     def set_defense(self, defense):
         """
@@ -757,6 +725,9 @@ class Personnage:
     ###########################
     #####     GETTERS     #####
     ###########################
+    def get_gold(self):
+        return self._gold
+
     def get_inventory(self):
         return self._inventory
 
@@ -857,7 +828,6 @@ class Personnage:
         """
         return self._player_pos
            
-
     def get_dodge(self):
         """
         get_dodge : Fonction qui retourne le nom du personnage
@@ -894,9 +864,6 @@ class Personnage:
         """
         return self._name
 
-
-
-
     def get_max_health(self):
         """
         get_max_health : Fonction qui retourne les points de vie maximaux du personnage
@@ -908,9 +875,6 @@ class Personnage:
             int: Points de vie maximaux du personnage
         """
         return self._max_health
-
-
-
 
     def get_health(self):
         """
@@ -924,9 +888,6 @@ class Personnage:
         """
         return self._health
 
-
-
-
     def get_max_energy(self):
         """
         get_max_energy : Fonction qui retourne les points d'énergie maximaux du personnage
@@ -938,9 +899,6 @@ class Personnage:
             int: Points d'énergie maximaux du personnage
         """
         return self._max_energy
-
-
-
 
     def get_energy(self):
         """
@@ -954,9 +912,6 @@ class Personnage:
         """
         return self._energy
 
-
-
-
     def get_damage(self):
         """
         get_damage : Fonction qui retourne les dégâts du personnage
@@ -968,9 +923,6 @@ class Personnage:
             int: Dégâts du personnage
         """
         return self._damage
-
-
-
 
     def get_defense(self):
         """

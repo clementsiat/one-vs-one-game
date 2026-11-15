@@ -273,6 +273,16 @@ while running:
         (0, 50)
     )
 
+    text_gold = my_font.render(
+        'Gold = ' + str(main_player.get_gold()),
+        False,
+        (255, 215, 0)
+    )
+
+    screen.blit(
+        text_gold,
+        (0, 90)
+    )
     #################
     ###ÉVÉNEMENTS####
     #################

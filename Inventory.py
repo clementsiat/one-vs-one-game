@@ -14,34 +14,27 @@ class Inventory:
                 self._items.append(item)
                 return True
             else:
-                print("ajout stackable")
                 for element in self._items:
                     if isinstance(element, type(item)) and item._current_stack > 0:
-                        print("un objet existe déjà dans l'inventaire")
                         if element._current_stack == element._max_stack:
                             continue
                         elif element._current_stack + item._current_stack <= element._max_stack:
                             element._current_stack += item._current_stack
                             item._current_stack = 0
-                            print("current stack OK tout est ajouté")
                         else:
                             stack_to_fill = element._max_stack - element._current_stack
                             element._current_stack += stack_to_fill
                             item._current_stack -= stack_to_fill
-                            print("current stack NOK ajout partiel")
                 if item._current_stack > 0 and len(self._items) < self._inventory_size:
                     qty_to_add = item._current_stack
-                    print(f"Nouvelle quantité a ajouter: {qty_to_add}")
                     for i in range(0, int(math.ceil(item._max_stack / item._current_stack))):
                         if qty_to_add >= item._max_stack:
                             item._current_stack = item._max_stack
                             qty_to_add -= item._max_stack
                             self._items.append(copy(item))
-                            print("Nouvelle stack complete")
                         else:
                             item._current_stack = qty_to_add
                             self._items.append(copy(item))
-                            print("Nouvelle stack partielle")
                         return True    
         
         return False

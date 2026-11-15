@@ -12,6 +12,15 @@ class Mutation(Enum):
     PLATINE = 7
     GOD = 10
 
+MUTATION_COLORS = {
+    Mutation.BRONZE: (205, 127, 50),
+    Mutation.SILVER: (192, 192, 192),
+    Mutation.GOLD: (255, 215, 0),
+    Mutation.DIAMANT: (0, 220, 255),
+    Mutation.PLATINE: (180, 100, 255),
+    Mutation.GOD: (255, 40, 180)
+}
+
 
 class Weapon(Item):
     def __init__(self, damage, attack_range, attack_speed, durability, weapon_type, image):
@@ -28,34 +37,30 @@ class Weapon(Item):
         """
 
         super().__init__(image, stackable = False)
+        self._base_image = image.copy() if image is not None else None
         self._name = random.choice(weapon_name_list)
         self._damage = damage
         self._attack_range = attack_range
         self._attack_speed = attack_speed
         self._durability = durability
         self._weapon_type = weapon_type
-        self._rarity = Mutation.BRONZE
+        self._mutation = Mutation.BRONZE
 
 
     def mutate(self):
 
-        nombre = random.uniform(1, 100)
+        nombre = random.randint(1, 100)
 
-        if 1 <= nombre <= 40:
+        if nombre <= 40:
             self._mutation = Mutation.BRONZE
-
-        elif 41 <= nombre <= 70:
+        elif nombre <= 70:
             self._mutation = Mutation.SILVER
-
-        elif 71 <= nombre <= 85:
+        elif nombre <= 85:
             self._mutation = Mutation.GOLD
-
-        elif 76 <= nombre <= 90:
+        elif nombre <= 90:
             self._mutation = Mutation.DIAMANT
-        
-        elif 91 <= nombre <= 99.7:
+        elif nombre <= 99:
             self._mutation = Mutation.PLATINE
-
         else:
             self._mutation = Mutation.GOD
 
@@ -64,9 +69,30 @@ class Weapon(Item):
         self._damage *= multiplicateur
         self._durability *= multiplicateur
 
+        # Changer la couleur de l'image
+        if self._base_image is not None:
+            self._image = self._base_image.copy()
+            couleur = MUTATION_COLORS[self._mutation]
+
+            largeur, hauteur = self._image.get_size()
+
+            for x in range(largeur):
+                for y in range(hauteur):
+                    pixel = self._base_image.get_at((x, y))
+
+                    if pixel.a > 0:
+                        luminosite = (pixel.r + pixel.g + pixel.b) / 3
+                        facteur = 0.4 + 0.6 * luminosite / 255
+
+                        self._image.set_at((x, y), (
+                            int(couleur[0] * facteur),
+                            int(couleur[1] * facteur),
+                            int(couleur[2] * facteur),
+                            pixel.a
+                        ))
+
         print(f"Nouvelle rareté : {self._mutation.name}")
-        
-        
+    
     def is_colliding(self, start_pos, direction, personnages, owner):
         raise NotImplementedError("Your is_colliding method is not written")      
 
@@ -217,8 +243,6 @@ class Spear(Weapon):
 
         return touched
     
-
-
 class Dagger(Weapon):
 
     def __init__(self, damage, attack_range, attack_speed, durability, image):
@@ -295,8 +319,6 @@ class Dagger(Weapon):
                 touched.append(enemy)
 
         return touched
-
-
 
 class Axe(Weapon):
 
